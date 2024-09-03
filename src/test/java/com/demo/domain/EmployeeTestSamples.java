@@ -2,12 +2,14 @@ package com.demo.domain;
 
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class EmployeeTestSamples {
 
     private static final Random random = new Random();
     private static final AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
+    private static final AtomicInteger intCount = new AtomicInteger(random.nextInt() + (2 * Short.MAX_VALUE));
 
     public static Employee getEmployeeSample1() {
         return new Employee()
@@ -17,7 +19,8 @@ public class EmployeeTestSamples {
             .email("email1")
             .phoneNumber("phoneNumber1")
             .salary(1L)
-            .commissionPct(1L);
+            .commissionPct(1L)
+            .level(1);
     }
 
     public static Employee getEmployeeSample2() {
@@ -28,7 +31,8 @@ public class EmployeeTestSamples {
             .email("email2")
             .phoneNumber("phoneNumber2")
             .salary(2L)
-            .commissionPct(2L);
+            .commissionPct(2L)
+            .level(2);
     }
 
     public static Employee getEmployeeRandomSampleGenerator() {
@@ -39,6 +43,7 @@ public class EmployeeTestSamples {
             .email(UUID.randomUUID().toString())
             .phoneNumber(UUID.randomUUID().toString())
             .salary(longCount.incrementAndGet())
-            .commissionPct(longCount.incrementAndGet());
+            .commissionPct(longCount.incrementAndGet())
+            .level(intCount.incrementAndGet());
     }
 }

@@ -4,17 +4,23 @@
   },
   "applications": "*",
   "documentation": "Task entity.\\n@author The JHipster team.",
+  "dto": "mapstruct",
   "fields": [
     {
       "fieldName": "title",
-      "fieldType": "String"
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength", "required", "pattern"],
+      "fieldValidateRulesMaxlength": "256",
+      "fieldValidateRulesPattern": "^[A-Z].*$"
     },
     {
       "fieldName": "description",
-      "fieldType": "String"
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text"
     }
   ],
   "name": "Task",
+  "pagination": "pagination",
   "relationships": [
     {
       "otherEntityName": "job",

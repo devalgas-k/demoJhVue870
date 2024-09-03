@@ -1,0 +1,67 @@
+{
+  "annotations": {
+    "changelogDate": "20240903042224"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "title",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength", "required", "pattern"],
+      "fieldValidateRulesMaxlength": "256",
+      "fieldValidateRulesPattern": "^[A-Z].*$"
+    },
+    {
+      "fieldName": "company",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength", "unique", "required", "pattern"],
+      "fieldValidateRulesMaxlength": "256",
+      "fieldValidateRulesPattern": "^[A-Z].*$"
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text"
+    },
+    {
+      "fieldName": "logoCompany",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "image"
+    },
+    {
+      "fieldName": "inProgress",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "contract",
+      "fieldType": "Contract",
+      "fieldTypeDocumentation": "This is a contract\\ncontract am enum",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "CDI (Permanent contract),CDD (Fixed-term contract),FREELANCE (Freelance)"
+    },
+    {
+      "fieldName": "startDate",
+      "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "endDate",
+      "fieldType": "LocalDate"
+    }
+  ],
+  "name": "Experience",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityField": "title",
+      "otherEntityName": "expertise",
+      "otherEntityRelationshipName": "experience",
+      "relationshipName": "expertise",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceImpl"
+}

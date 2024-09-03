@@ -1,0 +1,11 @@
+id;title;company;description;logo_company;logo_company_content_type;in_progress;contract;start_date;end_date
+1;"A9+!";"M{ao:4";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;true;CDD;2024-09-02;2024-09-02
+2;"W#";"YvRaIO";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;false;CDD;2024-09-02;2024-09-03
+3;"Od;=";"SQ&x4";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;true;CDD;2024-09-02;2024-09-03
+4;"Y6U%";"R,M";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;false;CDI;2024-09-02;2024-09-02
+5;"Gy";"B%[";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;true;CDD;2024-09-03;2024-09-03
+6;"F,k)%)";"YQ";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;false;CDI;2024-09-02;2024-09-02
+7;"P-f1>'";"XvKQ";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;true;CDI;2024-09-02;2024-09-02
+8;"Z";"V8ri";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;false;CDI;2024-09-02;2024-09-03
+9;"E(O";"O";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;true;CDD;2024-09-03;2024-09-02
+10;"X1kab7";"Xn/u";../fake-data/blob/hipster.txt;../fake-data/blob/hipster.png;image/png;true;FREELANCE;2024-09-03;2024-09-03

@@ -2,6 +2,7 @@ package com.demo.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -23,6 +24,7 @@ public class Region implements Serializable {
     @Column(name = "id")
     private Long id;
 
+    @Pattern(regexp = "^[A-Z][a-z]+\\d$")
     @Column(name = "region_name")
     private String regionName;
 

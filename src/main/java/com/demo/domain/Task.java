@@ -1,8 +1,8 @@
 package com.demo.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,7 +13,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
  * Task entity.
  * @author The JHipster team.
  */
-@Schema(description = "Task entity.\n@author The JHipster team.")
 @Entity
 @Table(name = "task")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -28,9 +27,13 @@ public class Task implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "title")
+    @NotNull
+    @Size(max = 256)
+    @Pattern(regexp = "^[A-Z].*$")
+    @Column(name = "title", length = 256, nullable = false)
     private String title;
 
+    @Lob
     @Column(name = "description")
     private String description;
 

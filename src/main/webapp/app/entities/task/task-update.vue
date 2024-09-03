@@ -22,19 +22,22 @@
               data-cy="title"
               :class="{ valid: !v$.title.$invalid, invalid: v$.title.$invalid }"
               v-model="v$.title.$model"
+              required
             />
+            <div v-if="v$.title.$anyDirty && v$.title.$invalid">
+              <small class="form-text text-danger" v-for="error of v$.title.$errors" :key="error.$uid">{{ error.$message }}</small>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-control-label" v-text="t$('demoJhVue870App.task.description')" for="task-description"></label>
-            <input
-              type="text"
+            <textarea
               class="form-control"
               name="description"
               id="task-description"
               data-cy="description"
               :class="{ valid: !v$.description.$invalid, invalid: v$.description.$invalid }"
               v-model="v$.description.$model"
-            />
+            ></textarea>
           </div>
           <div class="form-group">
             <label v-text="t$('demoJhVue870App.task.job')" for="task-job"></label>

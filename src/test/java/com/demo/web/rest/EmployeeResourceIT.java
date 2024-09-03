@@ -9,11 +9,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.demo.IntegrationTest;
 import com.demo.domain.Employee;
+import com.demo.domain.enumeration.Contract;
 import com.demo.repository.EmployeeRepository;
+import com.demo.service.dto.EmployeeDTO;
+import com.demo.service.mapper.EmployeeMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.AfterEach;
@@ -40,8 +44,8 @@ class EmployeeResourceIT {
     private static final String DEFAULT_LAST_NAME = "AAAAAAAAAA";
     private static final String UPDATED_LAST_NAME = "BBBBBBBBBB";
 
-    private static final String DEFAULT_EMAIL = "AAAAAAAAAA";
-    private static final String UPDATED_EMAIL = "BBBBBBBBBB";
+    private static final String DEFAULT_EMAIL = ":l}8@#6c.'\\)jj";
+    private static final String UPDATED_EMAIL = "N@E8(.BnUa";
 
     private static final String DEFAULT_PHONE_NUMBER = "AAAAAAAAAA";
     private static final String UPDATED_PHONE_NUMBER = "BBBBBBBBBB";
@@ -55,6 +59,17 @@ class EmployeeResourceIT {
     private static final Long DEFAULT_COMMISSION_PCT = 1L;
     private static final Long UPDATED_COMMISSION_PCT = 2L;
 
+    private static final Integer DEFAULT_LEVEL = 1;
+    private static final Integer UPDATED_LEVEL = 2;
+
+    private static final Contract DEFAULT_CONTRACT = Contract.CDI;
+    private static final Contract UPDATED_CONTRACT = Contract.CDD;
+
+    private static final byte[] DEFAULT_CV = TestUtil.createByteArray(1, "0");
+    private static final byte[] UPDATED_CV = TestUtil.createByteArray(1, "1");
+    private static final String DEFAULT_CV_CONTENT_TYPE = "image/jpg";
+    private static final String UPDATED_CV_CONTENT_TYPE = "image/png";
+
     private static final String ENTITY_API_URL = "/api/employees";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
 
@@ -66,6 +81,9 @@ class EmployeeResourceIT {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private EmployeeMapper employeeMapper;
 
     @Autowired
     private EntityManager em;
@@ -91,7 +109,11 @@ class EmployeeResourceIT {
             .phoneNumber(DEFAULT_PHONE_NUMBER)
             .hireDate(DEFAULT_HIRE_DATE)
             .salary(DEFAULT_SALARY)
-            .commissionPct(DEFAULT_COMMISSION_PCT);
+            .commissionPct(DEFAULT_COMMISSION_PCT)
+            .level(DEFAULT_LEVEL)
+            .contract(DEFAULT_CONTRACT)
+            .cv(DEFAULT_CV)
+            .cvContentType(DEFAULT_CV_CONTENT_TYPE);
     }
 
     /**
@@ -108,7 +130,11 @@ class EmployeeResourceIT {
             .phoneNumber(UPDATED_PHONE_NUMBER)
             .hireDate(UPDATED_HIRE_DATE)
             .salary(UPDATED_SALARY)
-            .commissionPct(UPDATED_COMMISSION_PCT);
+            .commissionPct(UPDATED_COMMISSION_PCT)
+            .level(UPDATED_LEVEL)
+            .contract(UPDATED_CONTRACT)
+            .cv(UPDATED_CV)
+            .cvContentType(UPDATED_CV_CONTENT_TYPE);
     }
 
     @BeforeEach
@@ -129,18 +155,20 @@ class EmployeeResourceIT {
     void createEmployee() throws Exception {
         long databaseSizeBeforeCreate = getRepositoryCount();
         // Create the Employee
-        var returnedEmployee = om.readValue(
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+        var returnedEmployeeDTO = om.readValue(
             restEmployeeMockMvc
-                .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(employee)))
+                .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(employeeDTO)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString(),
-            Employee.class
+            EmployeeDTO.class
         );
 
         // Validate the Employee in the database
         assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
+        var returnedEmployee = employeeMapper.toEntity(returnedEmployeeDTO);
         assertEmployeeUpdatableFieldsEquals(returnedEmployee, getPersistedEmployee(returnedEmployee));
 
         insertedEmployee = returnedEmployee;
@@ -151,16 +179,34 @@ class EmployeeResourceIT {
     void createEmployeeWithExistingId() throws Exception {
         // Create the Employee with an existing ID
         employee.setId(1L);
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restEmployeeMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(employee)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(employeeDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the Employee in the database
         assertSameRepositoryCount(databaseSizeBeforeCreate);
+    }
+
+    @Test
+    @Transactional
+    void checkEmailIsRequired() throws Exception {
+        long databaseSizeBeforeTest = getRepositoryCount();
+        // set the field null
+        employee.setEmail(null);
+
+        // Create the Employee, which fails.
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+
+        restEmployeeMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(employeeDTO)))
+            .andExpect(status().isBadRequest());
+
+        assertSameRepositoryCount(databaseSizeBeforeTest);
     }
 
     @Test
@@ -181,7 +227,11 @@ class EmployeeResourceIT {
             .andExpect(jsonPath("$.[*].phoneNumber").value(hasItem(DEFAULT_PHONE_NUMBER)))
             .andExpect(jsonPath("$.[*].hireDate").value(hasItem(DEFAULT_HIRE_DATE.toString())))
             .andExpect(jsonPath("$.[*].salary").value(hasItem(DEFAULT_SALARY.intValue())))
-            .andExpect(jsonPath("$.[*].commissionPct").value(hasItem(DEFAULT_COMMISSION_PCT.intValue())));
+            .andExpect(jsonPath("$.[*].commissionPct").value(hasItem(DEFAULT_COMMISSION_PCT.intValue())))
+            .andExpect(jsonPath("$.[*].level").value(hasItem(DEFAULT_LEVEL)))
+            .andExpect(jsonPath("$.[*].contract").value(hasItem(DEFAULT_CONTRACT.toString())))
+            .andExpect(jsonPath("$.[*].cvContentType").value(hasItem(DEFAULT_CV_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].cv").value(hasItem(Base64.getEncoder().encodeToString(DEFAULT_CV))));
     }
 
     @Test
@@ -202,7 +252,11 @@ class EmployeeResourceIT {
             .andExpect(jsonPath("$.phoneNumber").value(DEFAULT_PHONE_NUMBER))
             .andExpect(jsonPath("$.hireDate").value(DEFAULT_HIRE_DATE.toString()))
             .andExpect(jsonPath("$.salary").value(DEFAULT_SALARY.intValue()))
-            .andExpect(jsonPath("$.commissionPct").value(DEFAULT_COMMISSION_PCT.intValue()));
+            .andExpect(jsonPath("$.commissionPct").value(DEFAULT_COMMISSION_PCT.intValue()))
+            .andExpect(jsonPath("$.level").value(DEFAULT_LEVEL))
+            .andExpect(jsonPath("$.contract").value(DEFAULT_CONTRACT.toString()))
+            .andExpect(jsonPath("$.cvContentType").value(DEFAULT_CV_CONTENT_TYPE))
+            .andExpect(jsonPath("$.cv").value(Base64.getEncoder().encodeToString(DEFAULT_CV)));
     }
 
     @Test
@@ -231,13 +285,18 @@ class EmployeeResourceIT {
             .phoneNumber(UPDATED_PHONE_NUMBER)
             .hireDate(UPDATED_HIRE_DATE)
             .salary(UPDATED_SALARY)
-            .commissionPct(UPDATED_COMMISSION_PCT);
+            .commissionPct(UPDATED_COMMISSION_PCT)
+            .level(UPDATED_LEVEL)
+            .contract(UPDATED_CONTRACT)
+            .cv(UPDATED_CV)
+            .cvContentType(UPDATED_CV_CONTENT_TYPE);
+        EmployeeDTO employeeDTO = employeeMapper.toDto(updatedEmployee);
 
         restEmployeeMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, updatedEmployee.getId())
+                put(ENTITY_API_URL_ID, employeeDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(updatedEmployee))
+                    .content(om.writeValueAsBytes(employeeDTO))
             )
             .andExpect(status().isOk());
 
@@ -252,10 +311,15 @@ class EmployeeResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         employee.setId(longCount.incrementAndGet());
 
+        // Create the Employee
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restEmployeeMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, employee.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(employee))
+                put(ENTITY_API_URL_ID, employeeDTO.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(om.writeValueAsBytes(employeeDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -269,12 +333,15 @@ class EmployeeResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         employee.setId(longCount.incrementAndGet());
 
+        // Create the Employee
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restEmployeeMockMvc
             .perform(
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(employee))
+                    .content(om.writeValueAsBytes(employeeDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -288,9 +355,12 @@ class EmployeeResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         employee.setId(longCount.incrementAndGet());
 
+        // Create the Employee
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restEmployeeMockMvc
-            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(employee)))
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(employeeDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Employee in the database
@@ -310,10 +380,15 @@ class EmployeeResourceIT {
         partialUpdatedEmployee.setId(employee.getId());
 
         partialUpdatedEmployee
+            .firstName(UPDATED_FIRST_NAME)
             .lastName(UPDATED_LAST_NAME)
-            .hireDate(UPDATED_HIRE_DATE)
-            .salary(UPDATED_SALARY)
-            .commissionPct(UPDATED_COMMISSION_PCT);
+            .email(UPDATED_EMAIL)
+            .phoneNumber(UPDATED_PHONE_NUMBER)
+            .commissionPct(UPDATED_COMMISSION_PCT)
+            .level(UPDATED_LEVEL)
+            .contract(UPDATED_CONTRACT)
+            .cv(UPDATED_CV)
+            .cvContentType(UPDATED_CV_CONTENT_TYPE);
 
         restEmployeeMockMvc
             .perform(
@@ -348,7 +423,11 @@ class EmployeeResourceIT {
             .phoneNumber(UPDATED_PHONE_NUMBER)
             .hireDate(UPDATED_HIRE_DATE)
             .salary(UPDATED_SALARY)
-            .commissionPct(UPDATED_COMMISSION_PCT);
+            .commissionPct(UPDATED_COMMISSION_PCT)
+            .level(UPDATED_LEVEL)
+            .contract(UPDATED_CONTRACT)
+            .cv(UPDATED_CV)
+            .cvContentType(UPDATED_CV_CONTENT_TYPE);
 
         restEmployeeMockMvc
             .perform(
@@ -370,12 +449,15 @@ class EmployeeResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         employee.setId(longCount.incrementAndGet());
 
+        // Create the Employee
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restEmployeeMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, employee.getId())
+                patch(ENTITY_API_URL_ID, employeeDTO.getId())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(employee))
+                    .content(om.writeValueAsBytes(employeeDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -389,12 +471,15 @@ class EmployeeResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         employee.setId(longCount.incrementAndGet());
 
+        // Create the Employee
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restEmployeeMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(employee))
+                    .content(om.writeValueAsBytes(employeeDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -408,9 +493,12 @@ class EmployeeResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         employee.setId(longCount.incrementAndGet());
 
+        // Create the Employee
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restEmployeeMockMvc
-            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(om.writeValueAsBytes(employee)))
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(om.writeValueAsBytes(employeeDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Employee in the database

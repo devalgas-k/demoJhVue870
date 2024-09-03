@@ -1,4 +1,4 @@
-import { type Ref, defineComponent, inject, onMounted, ref } from 'vue';
+import { type Ref, defineComponent, inject, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import DepartmentService from './department.service';
@@ -13,16 +13,40 @@ export default defineComponent({
     const departmentService = inject('departmentService', () => new DepartmentService());
     const alertService = inject('alertService', () => useAlertService(), true);
 
+    const itemsPerPage = ref(20);
+    const queryCount: Ref<number> = ref(null);
+    const page: Ref<number> = ref(1);
+    const propOrder = ref('id');
+    const reverse = ref(false);
+    const totalItems = ref(0);
+
     const departments: Ref<IDepartment[]> = ref([]);
 
     const isFetching = ref(false);
 
-    const clear = () => {};
+    const clear = () => {
+      page.value = 1;
+    };
+
+    const sort = (): Array<any> => {
+      const result = [`${propOrder.value},${reverse.value ? 'desc' : 'asc'}`];
+      if (propOrder.value !== 'id') {
+        result.push('id');
+      }
+      return result;
+    };
 
     const retrieveDepartments = async () => {
       isFetching.value = true;
       try {
-        const res = await departmentService().retrieve();
+        const paginationQuery = {
+          page: page.value - 1,
+          size: itemsPerPage.value,
+          sort: sort(),
+        };
+        const res = await departmentService().retrieve(paginationQuery);
+        totalItems.value = Number(res.headers['x-total-count']);
+        queryCount.value = totalItems.value;
         departments.value = res.data;
       } catch (err) {
         alertService.showHttpError(err.response);
@@ -61,6 +85,31 @@ export default defineComponent({
       }
     };
 
+    const changeOrder = (newOrder: string) => {
+      if (propOrder.value === newOrder) {
+        reverse.value = !reverse.value;
+      } else {
+        reverse.value = false;
+      }
+      propOrder.value = newOrder;
+    };
+
+    // Whenever order changes, reset the pagination
+    watch([propOrder, reverse], async () => {
+      if (page.value === 1) {
+        // first page, retrieve new data
+        await retrieveDepartments();
+      } else {
+        // reset the pagination
+        clear();
+      }
+    });
+
+    // Whenever page changes, switch to the new page.
+    watch(page, async () => {
+      await retrieveDepartments();
+    });
+
     return {
       departments,
       handleSyncList,
@@ -72,6 +121,13 @@ export default defineComponent({
       prepareRemove,
       closeDialog,
       removeDepartment,
+      itemsPerPage,
+      queryCount,
+      page,
+      propOrder,
+      reverse,
+      totalItems,
+      changeOrder,
       t$,
     };
   },

@@ -39,6 +39,26 @@
               <span v-text="t$('demoJhVue870App.job.maxSalary')"></span>
               <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'maxSalary'"></jhi-sort-indicator>
             </th>
+            <th scope="row" @click="changeOrder('subSalary')">
+              <span v-text="t$('demoJhVue870App.job.subSalary')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'subSalary'"></jhi-sort-indicator>
+            </th>
+            <th scope="row" @click="changeOrder('totalSalary')">
+              <span v-text="t$('demoJhVue870App.job.totalSalary')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'totalSalary'"></jhi-sort-indicator>
+            </th>
+            <th scope="row" @click="changeOrder('date')">
+              <span v-text="t$('demoJhVue870App.job.date')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'date'"></jhi-sort-indicator>
+            </th>
+            <th scope="row" @click="changeOrder('codeCode')">
+              <span v-text="t$('demoJhVue870App.job.codeCode')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'codeCode'"></jhi-sort-indicator>
+            </th>
+            <th scope="row" @click="changeOrder('profil')">
+              <span v-text="t$('demoJhVue870App.job.profil')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'profil'"></jhi-sort-indicator>
+            </th>
             <th scope="row" @click="changeOrder('employee.id')">
               <span v-text="t$('demoJhVue870App.job.employee')"></span>
               <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'employee.id'"></jhi-sort-indicator>
@@ -54,6 +74,16 @@
             <td>{{ job.jobTitle }}</td>
             <td>{{ job.minSalary }}</td>
             <td>{{ job.maxSalary }}</td>
+            <td>{{ job.subSalary }}</td>
+            <td>{{ job.totalSalary }}</td>
+            <td>{{ job.date }}</td>
+            <td>{{ job.codeCode }}</td>
+            <td>
+              <a v-if="job.profil" @click="openFile(job.profilContentType, job.profil)">
+                <img :src="'data:' + job.profilContentType + ';base64,' + job.profil" style="max-height: 30px" alt="job" />
+              </a>
+              <span v-if="job.profil">{{ job.profilContentType }}, {{ byteSize(job.profil) }}</span>
+            </td>
             <td>
               <div v-if="job.employee">
                 <router-link :to="{ name: 'EmployeeView', params: { employeeId: job.employee.id } }">{{ job.employee.id }}</router-link>

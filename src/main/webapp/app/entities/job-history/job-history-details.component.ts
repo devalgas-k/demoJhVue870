@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
 import JobHistoryService from './job-history.service';
+import useDataUtils from '@/shared/data/data-utils.service';
 import { useDateFormat } from '@/shared/composables';
 import { type IJobHistory } from '@/shared/model/job-history.model';
 import { useAlertService } from '@/shared/alert/alert.service';
@@ -14,6 +15,8 @@ export default defineComponent({
     const dateFormat = useDateFormat();
     const jobHistoryService = inject('jobHistoryService', () => new JobHistoryService());
     const alertService = inject('alertService', () => useAlertService(), true);
+
+    const dataUtils = useDataUtils();
 
     const route = useRoute();
     const router = useRouter();
@@ -38,6 +41,8 @@ export default defineComponent({
       ...dateFormat,
       alertService,
       jobHistory,
+
+      ...dataUtils,
 
       previousState,
       t$: useI18n().t,

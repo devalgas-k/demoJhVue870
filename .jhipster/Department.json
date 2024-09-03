@@ -3,6 +3,7 @@
     "changelogDate": "20240903035051"
   },
   "applications": "*",
+  "dto": "mapstruct",
   "fields": [
     {
       "fieldName": "departmentName",
@@ -11,6 +12,7 @@
     }
   ],
   "name": "Department",
+  "pagination": "pagination",
   "relationships": [
     {
       "otherEntityName": "location",

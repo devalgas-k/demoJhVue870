@@ -23,6 +23,9 @@
               :class="{ valid: !v$.regionName.$invalid, invalid: v$.regionName.$invalid }"
               v-model="v$.regionName.$model"
             />
+            <div v-if="v$.regionName.$anyDirty && v$.regionName.$invalid">
+              <small class="form-text text-danger" v-for="error of v$.regionName.$errors" :key="error.$uid">{{ error.$message }}</small>
+            </div>
           </div>
         </div>
         <div>

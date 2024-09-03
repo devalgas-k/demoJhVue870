@@ -3,6 +3,7 @@
     "changelogDate": "20240903035054"
   },
   "applications": "*",
+  "dto": "mapstruct",
   "fields": [
     {
       "fieldName": "startDate",
@@ -16,10 +17,23 @@
       "fieldName": "language",
       "fieldType": "Language",
       "fieldValues": "FRENCH,ENGLISH,SPANISH"
+    },
+    {
+      "fieldName": "file",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "any"
+    },
+    {
+      "fieldName": "date",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "duration",
+      "fieldType": "Duration"
     }
   ],
   "name": "JobHistory",
-  "pagination": "infinite-scroll",
+  "pagination": "pagination",
   "relationships": [
     {
       "otherEntityName": "job",

@@ -4,6 +4,7 @@
   },
   "applications": "*",
   "documentation": "The Employee entity.",
+  "dto": "mapstruct",
   "fields": [
     {
       "documentation": "The firstname attribute.",
@@ -16,7 +17,9 @@
     },
     {
       "fieldName": "email",
-      "fieldType": "String"
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "pattern"],
+      "fieldValidateRulesPattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
     },
     {
       "fieldName": "phoneNumber",
@@ -33,10 +36,28 @@
     {
       "fieldName": "commissionPct",
       "fieldType": "Long"
+    },
+    {
+      "fieldName": "level",
+      "fieldType": "Integer",
+      "fieldValidateRules": ["min", "max"],
+      "fieldValidateRulesMax": "14",
+      "fieldValidateRulesMin": "1"
+    },
+    {
+      "fieldName": "contract",
+      "fieldType": "Contract",
+      "fieldTypeDocumentation": "This is a contract\\ncontract am enum",
+      "fieldValues": "CDI (Permanent contract),CDD (Fixed-term contract),FREELANCE (Freelance)"
+    },
+    {
+      "fieldName": "cv",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "any"
     }
   ],
   "name": "Employee",
-  "pagination": "infinite-scroll",
+  "pagination": "pagination",
   "relationships": [
     {
       "otherEntityName": "job",
@@ -59,5 +80,6 @@
       "relationshipType": "many-to-one"
     }
   ],
-  "searchEngine": "no"
+  "searchEngine": "no",
+  "service": "serviceClass"
 }

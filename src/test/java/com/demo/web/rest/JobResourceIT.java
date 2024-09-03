@@ -2,6 +2,7 @@ package com.demo.web.rest;
 
 import static com.demo.domain.JobAsserts.*;
 import static com.demo.web.rest.TestUtil.createUpdateProxyForBean;
+import static com.demo.web.rest.TestUtil.sameNumber;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.*;
@@ -11,10 +12,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.demo.IntegrationTest;
 import com.demo.domain.Job;
 import com.demo.repository.JobRepository;
+import com.demo.service.JobService;
+import com.demo.service.dto.JobDTO;
+import com.demo.service.mapper.JobMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,11 +52,28 @@ class JobResourceIT {
     private static final String DEFAULT_JOB_TITLE = "AAAAAAAAAA";
     private static final String UPDATED_JOB_TITLE = "BBBBBBBBBB";
 
-    private static final Long DEFAULT_MIN_SALARY = 1L;
-    private static final Long UPDATED_MIN_SALARY = 2L;
+    private static final BigDecimal DEFAULT_MIN_SALARY = new BigDecimal(1);
+    private static final BigDecimal UPDATED_MIN_SALARY = new BigDecimal(2);
 
     private static final Long DEFAULT_MAX_SALARY = 1L;
     private static final Long UPDATED_MAX_SALARY = 2L;
+
+    private static final Float DEFAULT_SUB_SALARY = 1F;
+    private static final Float UPDATED_SUB_SALARY = 2F;
+
+    private static final Double DEFAULT_TOTAL_SALARY = 1D;
+    private static final Double UPDATED_TOTAL_SALARY = 2D;
+
+    private static final LocalDate DEFAULT_DATE = LocalDate.ofEpochDay(0L);
+    private static final LocalDate UPDATED_DATE = LocalDate.now(ZoneId.systemDefault());
+
+    private static final UUID DEFAULT_CODE_CODE = UUID.randomUUID();
+    private static final UUID UPDATED_CODE_CODE = UUID.randomUUID();
+
+    private static final byte[] DEFAULT_PROFIL = TestUtil.createByteArray(1, "0");
+    private static final byte[] UPDATED_PROFIL = TestUtil.createByteArray(1, "1");
+    private static final String DEFAULT_PROFIL_CONTENT_TYPE = "image/jpg";
+    private static final String UPDATED_PROFIL_CONTENT_TYPE = "image/png";
 
     private static final String ENTITY_API_URL = "/api/jobs";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
@@ -63,6 +89,12 @@ class JobResourceIT {
 
     @Mock
     private JobRepository jobRepositoryMock;
+
+    @Autowired
+    private JobMapper jobMapper;
+
+    @Mock
+    private JobService jobServiceMock;
 
     @Autowired
     private EntityManager em;
@@ -81,7 +113,16 @@ class JobResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Job createEntity() {
-        return new Job().jobTitle(DEFAULT_JOB_TITLE).minSalary(DEFAULT_MIN_SALARY).maxSalary(DEFAULT_MAX_SALARY);
+        return new Job()
+            .jobTitle(DEFAULT_JOB_TITLE)
+            .minSalary(DEFAULT_MIN_SALARY)
+            .maxSalary(DEFAULT_MAX_SALARY)
+            .subSalary(DEFAULT_SUB_SALARY)
+            .totalSalary(DEFAULT_TOTAL_SALARY)
+            .date(DEFAULT_DATE)
+            .codeCode(DEFAULT_CODE_CODE)
+            .profil(DEFAULT_PROFIL)
+            .profilContentType(DEFAULT_PROFIL_CONTENT_TYPE);
     }
 
     /**
@@ -91,7 +132,16 @@ class JobResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Job createUpdatedEntity() {
-        return new Job().jobTitle(UPDATED_JOB_TITLE).minSalary(UPDATED_MIN_SALARY).maxSalary(UPDATED_MAX_SALARY);
+        return new Job()
+            .jobTitle(UPDATED_JOB_TITLE)
+            .minSalary(UPDATED_MIN_SALARY)
+            .maxSalary(UPDATED_MAX_SALARY)
+            .subSalary(UPDATED_SUB_SALARY)
+            .totalSalary(UPDATED_TOTAL_SALARY)
+            .date(UPDATED_DATE)
+            .codeCode(UPDATED_CODE_CODE)
+            .profil(UPDATED_PROFIL)
+            .profilContentType(UPDATED_PROFIL_CONTENT_TYPE);
     }
 
     @BeforeEach
@@ -112,18 +162,20 @@ class JobResourceIT {
     void createJob() throws Exception {
         long databaseSizeBeforeCreate = getRepositoryCount();
         // Create the Job
-        var returnedJob = om.readValue(
+        JobDTO jobDTO = jobMapper.toDto(job);
+        var returnedJobDTO = om.readValue(
             restJobMockMvc
-                .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(job)))
+                .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobDTO)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString(),
-            Job.class
+            JobDTO.class
         );
 
         // Validate the Job in the database
         assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
+        var returnedJob = jobMapper.toEntity(returnedJobDTO);
         assertJobUpdatableFieldsEquals(returnedJob, getPersistedJob(returnedJob));
 
         insertedJob = returnedJob;
@@ -134,16 +186,34 @@ class JobResourceIT {
     void createJobWithExistingId() throws Exception {
         // Create the Job with an existing ID
         job.setId(1L);
+        JobDTO jobDTO = jobMapper.toDto(job);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restJobMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(job)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the Job in the database
         assertSameRepositoryCount(databaseSizeBeforeCreate);
+    }
+
+    @Test
+    @Transactional
+    void checkJobTitleIsRequired() throws Exception {
+        long databaseSizeBeforeTest = getRepositoryCount();
+        // set the field null
+        job.setJobTitle(null);
+
+        // Create the Job, which fails.
+        JobDTO jobDTO = jobMapper.toDto(job);
+
+        restJobMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobDTO)))
+            .andExpect(status().isBadRequest());
+
+        assertSameRepositoryCount(databaseSizeBeforeTest);
     }
 
     @Test
@@ -159,22 +229,28 @@ class JobResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(job.getId().intValue())))
             .andExpect(jsonPath("$.[*].jobTitle").value(hasItem(DEFAULT_JOB_TITLE)))
-            .andExpect(jsonPath("$.[*].minSalary").value(hasItem(DEFAULT_MIN_SALARY.intValue())))
-            .andExpect(jsonPath("$.[*].maxSalary").value(hasItem(DEFAULT_MAX_SALARY.intValue())));
+            .andExpect(jsonPath("$.[*].minSalary").value(hasItem(sameNumber(DEFAULT_MIN_SALARY))))
+            .andExpect(jsonPath("$.[*].maxSalary").value(hasItem(DEFAULT_MAX_SALARY.intValue())))
+            .andExpect(jsonPath("$.[*].subSalary").value(hasItem(DEFAULT_SUB_SALARY.doubleValue())))
+            .andExpect(jsonPath("$.[*].totalSalary").value(hasItem(DEFAULT_TOTAL_SALARY.doubleValue())))
+            .andExpect(jsonPath("$.[*].date").value(hasItem(DEFAULT_DATE.toString())))
+            .andExpect(jsonPath("$.[*].codeCode").value(hasItem(DEFAULT_CODE_CODE.toString())))
+            .andExpect(jsonPath("$.[*].profilContentType").value(hasItem(DEFAULT_PROFIL_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].profil").value(hasItem(Base64.getEncoder().encodeToString(DEFAULT_PROFIL))));
     }
 
     @SuppressWarnings({ "unchecked" })
     void getAllJobsWithEagerRelationshipsIsEnabled() throws Exception {
-        when(jobRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+        when(jobServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
 
         restJobMockMvc.perform(get(ENTITY_API_URL + "?eagerload=true")).andExpect(status().isOk());
 
-        verify(jobRepositoryMock, times(1)).findAllWithEagerRelationships(any());
+        verify(jobServiceMock, times(1)).findAllWithEagerRelationships(any());
     }
 
     @SuppressWarnings({ "unchecked" })
     void getAllJobsWithEagerRelationshipsIsNotEnabled() throws Exception {
-        when(jobRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+        when(jobServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
 
         restJobMockMvc.perform(get(ENTITY_API_URL + "?eagerload=false")).andExpect(status().isOk());
         verify(jobRepositoryMock, times(1)).findAll(any(Pageable.class));
@@ -193,8 +269,14 @@ class JobResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(job.getId().intValue()))
             .andExpect(jsonPath("$.jobTitle").value(DEFAULT_JOB_TITLE))
-            .andExpect(jsonPath("$.minSalary").value(DEFAULT_MIN_SALARY.intValue()))
-            .andExpect(jsonPath("$.maxSalary").value(DEFAULT_MAX_SALARY.intValue()));
+            .andExpect(jsonPath("$.minSalary").value(sameNumber(DEFAULT_MIN_SALARY)))
+            .andExpect(jsonPath("$.maxSalary").value(DEFAULT_MAX_SALARY.intValue()))
+            .andExpect(jsonPath("$.subSalary").value(DEFAULT_SUB_SALARY.doubleValue()))
+            .andExpect(jsonPath("$.totalSalary").value(DEFAULT_TOTAL_SALARY.doubleValue()))
+            .andExpect(jsonPath("$.date").value(DEFAULT_DATE.toString()))
+            .andExpect(jsonPath("$.codeCode").value(DEFAULT_CODE_CODE.toString()))
+            .andExpect(jsonPath("$.profilContentType").value(DEFAULT_PROFIL_CONTENT_TYPE))
+            .andExpect(jsonPath("$.profil").value(Base64.getEncoder().encodeToString(DEFAULT_PROFIL)));
     }
 
     @Test
@@ -216,12 +298,20 @@ class JobResourceIT {
         Job updatedJob = jobRepository.findById(job.getId()).orElseThrow();
         // Disconnect from session so that the updates on updatedJob are not directly saved in db
         em.detach(updatedJob);
-        updatedJob.jobTitle(UPDATED_JOB_TITLE).minSalary(UPDATED_MIN_SALARY).maxSalary(UPDATED_MAX_SALARY);
+        updatedJob
+            .jobTitle(UPDATED_JOB_TITLE)
+            .minSalary(UPDATED_MIN_SALARY)
+            .maxSalary(UPDATED_MAX_SALARY)
+            .subSalary(UPDATED_SUB_SALARY)
+            .totalSalary(UPDATED_TOTAL_SALARY)
+            .date(UPDATED_DATE)
+            .codeCode(UPDATED_CODE_CODE)
+            .profil(UPDATED_PROFIL)
+            .profilContentType(UPDATED_PROFIL_CONTENT_TYPE);
+        JobDTO jobDTO = jobMapper.toDto(updatedJob);
 
         restJobMockMvc
-            .perform(
-                put(ENTITY_API_URL_ID, updatedJob.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(updatedJob))
-            )
+            .perform(put(ENTITY_API_URL_ID, jobDTO.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobDTO)))
             .andExpect(status().isOk());
 
         // Validate the Job in the database
@@ -235,9 +325,12 @@ class JobResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         job.setId(longCount.incrementAndGet());
 
+        // Create the Job
+        JobDTO jobDTO = jobMapper.toDto(job);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restJobMockMvc
-            .perform(put(ENTITY_API_URL_ID, job.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(job)))
+            .perform(put(ENTITY_API_URL_ID, jobDTO.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the Job in the database
@@ -250,12 +343,15 @@ class JobResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         job.setId(longCount.incrementAndGet());
 
+        // Create the Job
+        JobDTO jobDTO = jobMapper.toDto(job);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restJobMockMvc
             .perform(
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(job))
+                    .content(om.writeValueAsBytes(jobDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -269,9 +365,12 @@ class JobResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         job.setId(longCount.incrementAndGet());
 
+        // Create the Job
+        JobDTO jobDTO = jobMapper.toDto(job);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restJobMockMvc
-            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(job)))
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Job in the database
@@ -290,7 +389,12 @@ class JobResourceIT {
         Job partialUpdatedJob = new Job();
         partialUpdatedJob.setId(job.getId());
 
-        partialUpdatedJob.jobTitle(UPDATED_JOB_TITLE).minSalary(UPDATED_MIN_SALARY).maxSalary(UPDATED_MAX_SALARY);
+        partialUpdatedJob
+            .jobTitle(UPDATED_JOB_TITLE)
+            .minSalary(UPDATED_MIN_SALARY)
+            .maxSalary(UPDATED_MAX_SALARY)
+            .profil(UPDATED_PROFIL)
+            .profilContentType(UPDATED_PROFIL_CONTENT_TYPE);
 
         restJobMockMvc
             .perform(
@@ -318,7 +422,16 @@ class JobResourceIT {
         Job partialUpdatedJob = new Job();
         partialUpdatedJob.setId(job.getId());
 
-        partialUpdatedJob.jobTitle(UPDATED_JOB_TITLE).minSalary(UPDATED_MIN_SALARY).maxSalary(UPDATED_MAX_SALARY);
+        partialUpdatedJob
+            .jobTitle(UPDATED_JOB_TITLE)
+            .minSalary(UPDATED_MIN_SALARY)
+            .maxSalary(UPDATED_MAX_SALARY)
+            .subSalary(UPDATED_SUB_SALARY)
+            .totalSalary(UPDATED_TOTAL_SALARY)
+            .date(UPDATED_DATE)
+            .codeCode(UPDATED_CODE_CODE)
+            .profil(UPDATED_PROFIL)
+            .profilContentType(UPDATED_PROFIL_CONTENT_TYPE);
 
         restJobMockMvc
             .perform(
@@ -340,9 +453,14 @@ class JobResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         job.setId(longCount.incrementAndGet());
 
+        // Create the Job
+        JobDTO jobDTO = jobMapper.toDto(job);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restJobMockMvc
-            .perform(patch(ENTITY_API_URL_ID, job.getId()).contentType("application/merge-patch+json").content(om.writeValueAsBytes(job)))
+            .perform(
+                patch(ENTITY_API_URL_ID, jobDTO.getId()).contentType("application/merge-patch+json").content(om.writeValueAsBytes(jobDTO))
+            )
             .andExpect(status().isBadRequest());
 
         // Validate the Job in the database
@@ -355,12 +473,15 @@ class JobResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         job.setId(longCount.incrementAndGet());
 
+        // Create the Job
+        JobDTO jobDTO = jobMapper.toDto(job);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restJobMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(job))
+                    .content(om.writeValueAsBytes(jobDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -374,9 +495,12 @@ class JobResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         job.setId(longCount.incrementAndGet());
 
+        // Create the Job
+        JobDTO jobDTO = jobMapper.toDto(job);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restJobMockMvc
-            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(om.writeValueAsBytes(job)))
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(om.writeValueAsBytes(jobDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Job in the database

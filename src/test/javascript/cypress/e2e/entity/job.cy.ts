@@ -15,7 +15,11 @@ describe('Job e2e test', () => {
   const jobPageUrlPattern = new RegExp('/job(\\?.*)?$');
   const username = Cypress.env('E2E_USERNAME') ?? 'user';
   const password = Cypress.env('E2E_PASSWORD') ?? 'user';
-  const jobSample = {};
+  const jobSample = {
+    jobTitle: 'Executif de la sécurité international',
+    profil: 'Li4vZmFrZS1kYXRhL2Jsb2IvaGlwc3Rlci5wbmc=',
+    profilContentType: 'unknown',
+  };
 
   let job;
 
@@ -160,15 +164,32 @@ describe('Job e2e test', () => {
     });
 
     it('should create an instance of Job', () => {
-      cy.get(`[data-cy="jobTitle"]`).type('Consultant de la tactique client');
-      cy.get(`[data-cy="jobTitle"]`).should('have.value', 'Consultant de la tactique client');
+      cy.get(`[data-cy="jobTitle"]`).type("Architecte de l'assurance futur");
+      cy.get(`[data-cy="jobTitle"]`).should('have.value', "Architecte de l'assurance futur");
 
-      cy.get(`[data-cy="minSalary"]`).type('3253');
-      cy.get(`[data-cy="minSalary"]`).should('have.value', '3253');
+      cy.get(`[data-cy="minSalary"]`).type('990.48');
+      cy.get(`[data-cy="minSalary"]`).should('have.value', '990.48');
 
-      cy.get(`[data-cy="maxSalary"]`).type('14933');
-      cy.get(`[data-cy="maxSalary"]`).should('have.value', '14933');
+      cy.get(`[data-cy="maxSalary"]`).type('14290');
+      cy.get(`[data-cy="maxSalary"]`).should('have.value', '14290');
 
+      cy.get(`[data-cy="subSalary"]`).type('21219.02');
+      cy.get(`[data-cy="subSalary"]`).should('have.value', '21219.02');
+
+      cy.get(`[data-cy="totalSalary"]`).type('14694.55');
+      cy.get(`[data-cy="totalSalary"]`).should('have.value', '14694.55');
+
+      cy.get(`[data-cy="date"]`).type('2024-09-02');
+      cy.get(`[data-cy="date"]`).blur();
+      cy.get(`[data-cy="date"]`).should('have.value', '2024-09-02');
+
+      cy.get(`[data-cy="codeCode"]`).type('cd18aeef-0a95-49e8-9596-cdd8afb35698');
+      cy.get(`[data-cy="codeCode"]`).invoke('val').should('match', new RegExp('cd18aeef-0a95-49e8-9596-cdd8afb35698'));
+
+      cy.setFieldImageAsBytesOfEntity('profil', 'integration-test.png', 'image/png');
+
+      // since cypress clicks submit too fast before the blob fields are validated
+      cy.wait(200); // eslint-disable-line cypress/no-unnecessary-waiting
       cy.get(entityCreateSaveButtonSelector).click();
 
       cy.wait('@postEntityRequest').then(({ response }) => {

@@ -1,11 +1,11 @@
-id;job_title;min_salary;max_salary
-1;Administrateur des métriques humain;168;24283
-2;Assistant de l'utilisabilité humain;4941;4874
-3;Coordinateur de marque international;13785;513
-4;Executif de configuration régional;13280;9883
-5;Ingenieur de la mobilité national;29550;18833
-6;Assistant des marchés régional;7124;629
-7;Coordinateur des opérations principal;14127;31761
-8;Producteur de la réponse client;3274;20582
-9;Stagiaire de programme mondial;21457;27329
-10;Producteur de la création international;9695;11027
+id;job_title;min_salary;max_salary;sub_salary;total_salary;date;code_code;profil;profil_content_type
+1;Administrateur des métriques humain;168.13;24283;28574.45;32572.25;2024-09-02;22557601-0e64-423d-8e9d-bf306bd6fb41;../fake-data/blob/hipster.png;image/png
+2;Technicien de l'utilisabilité humain;23793.27;21457;27328.83;24178.03;2024-09-03;845e6f63-01ea-4079-b088-069adef89a4a;../fake-data/blob/hipster.png;image/png
+3;Technicien de l'optimisation central;13856.48;4329;28380.65;8866.42;2024-09-02;27e68308-bbc1-4dcf-83f8-682ca7c02644;../fake-data/blob/hipster.png;image/png
+4;Analyste des opérations international;28163.5;9896;22848.17;5577.12;2024-09-02;72d4270c-dc13-4b1f-84d0-a7250331d53e;../fake-data/blob/hipster.png;image/png
+5;Superviseur des opérations central;16115.26;21636;21330.89;23773.46;2024-09-02;ee0c4ad1-db08-4352-b9a1-abcc63922d5e;../fake-data/blob/hipster.png;image/png
+6;Analyste de recherche national;9674.29;25560;30091.75;20877.51;2024-09-03;1011c392-ef96-4058-a193-2a5004b60cf4;../fake-data/blob/hipster.png;image/png
+7;Technicien de la sécurité central;30080.12;28659;13030.5;32036.33;2024-09-02;ac6cb6ca-97c7-4367-9b65-fb0b5b822a59;../fake-data/blob/hipster.png;image/png
+8;Administrateur des opérations mondial;29987.82;19576;5399.96;30596.81;2024-09-03;16c24a6e-c015-418b-be74-ffbc64da8350;../fake-data/blob/hipster.png;image/png
+9;Coordinateur de configuration futur;5884.82;17384;8787.66;8190;2024-09-02;fd1ba835-d046-4986-b453-3ffbcdf77946;../fake-data/blob/hipster.png;image/png
+10;Coordinateur de la mise en œuvre central;25401.13;30623;7790.42;17808.03;2024-09-02;ecca1927-65f2-4a20-8327-0755e0b7ab03;../fake-data/blob/hipster.png;image/png

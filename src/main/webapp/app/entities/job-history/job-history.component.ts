@@ -1,6 +1,5 @@
-import { type Ref, defineComponent, inject, onMounted, ref, watch, watchEffect } from 'vue';
+import { type Ref, defineComponent, inject, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useIntersectionObserver } from '@vueuse/core';
 
 import JobHistoryService from './job-history.service';
 import { type IJobHistory } from '@/shared/model/job-history.model';
@@ -24,7 +23,6 @@ export default defineComponent({
     const propOrder = ref('id');
     const reverse = ref(false);
     const totalItems = ref(0);
-    const links: Ref<any> = ref({});
 
     const jobHistories: Ref<IJobHistory[]> = ref([]);
 
@@ -32,8 +30,6 @@ export default defineComponent({
 
     const clear = () => {
       page.value = 1;
-      links.value = {};
-      jobHistories.value = [];
     };
 
     const sort = (): Array<any> => {
@@ -55,8 +51,7 @@ export default defineComponent({
         const res = await jobHistoryService().retrieve(paginationQuery);
         totalItems.value = Number(res.headers['x-total-count']);
         queryCount.value = totalItems.value;
-        links.value = dataUtils.parseLinks(res.headers?.link);
-        jobHistories.value.push(...(res.data ?? []));
+        jobHistories.value = res.data;
       } catch (err) {
         alertService.showHttpError(err.response);
       } finally {
@@ -65,7 +60,7 @@ export default defineComponent({
     };
 
     const handleSyncList = () => {
-      clear();
+      retrieveJobHistorys();
     };
 
     onMounted(async () => {
@@ -87,7 +82,7 @@ export default defineComponent({
         const message = t$('demoJhVue870App.jobHistory.deleted', { param: removeId.value }).toString();
         alertService.showInfo(message, { variant: 'danger' });
         removeId.value = null;
-        clear();
+        retrieveJobHistorys();
         closeDialog();
       } catch (error) {
         alertService.showHttpError(error.response);
@@ -104,36 +99,19 @@ export default defineComponent({
     };
 
     // Whenever order changes, reset the pagination
-    watch([propOrder, reverse], () => {
-      clear();
-    });
-
-    // Whenever the data resets or page changes, switch to the new page.
-    watch([jobHistories, page], async ([data, page], [_prevData, prevPage]) => {
-      if (data.length === 0 || page !== prevPage) {
+    watch([propOrder, reverse], async () => {
+      if (page.value === 1) {
+        // first page, retrieve new data
         await retrieveJobHistorys();
+      } else {
+        // reset the pagination
+        clear();
       }
     });
 
-    const infiniteScrollEl = ref<HTMLElement>(null);
-    const intersectionObserver = useIntersectionObserver(
-      infiniteScrollEl,
-      intersection => {
-        if (intersection[0].isIntersecting && !isFetching.value) {
-          page.value++;
-        }
-      },
-      {
-        threshold: 0.5,
-        immediate: false,
-      },
-    );
-    watchEffect(() => {
-      if (links.value.next) {
-        intersectionObserver.resume();
-      } else if (intersectionObserver.isActive) {
-        intersectionObserver.pause();
-      }
+    // Whenever page changes, switch to the new page.
+    watch(page, async () => {
+      await retrieveJobHistorys();
     });
 
     return {
@@ -155,7 +133,6 @@ export default defineComponent({
       reverse,
       totalItems,
       changeOrder,
-      infiniteScrollEl,
       t$,
       ...dataUtils,
     };

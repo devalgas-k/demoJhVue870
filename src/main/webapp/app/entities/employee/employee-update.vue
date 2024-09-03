@@ -46,7 +46,11 @@
               data-cy="email"
               :class="{ valid: !v$.email.$invalid, invalid: v$.email.$invalid }"
               v-model="v$.email.$model"
+              required
             />
+            <div v-if="v$.email.$anyDirty && v$.email.$invalid">
+              <small class="form-text text-danger" v-for="error of v$.email.$errors" :key="error.$uid">{{ error.$message }}</small>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-control-label" v-text="t$('demoJhVue870App.employee.phoneNumber')" for="employee-phoneNumber"></label>
@@ -98,6 +102,79 @@
               :class="{ valid: !v$.commissionPct.$invalid, invalid: v$.commissionPct.$invalid }"
               v-model.number="v$.commissionPct.$model"
             />
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.employee.level')" for="employee-level"></label>
+            <input
+              type="number"
+              class="form-control"
+              name="level"
+              id="employee-level"
+              data-cy="level"
+              :class="{ valid: !v$.level.$invalid, invalid: v$.level.$invalid }"
+              v-model.number="v$.level.$model"
+            />
+            <div v-if="v$.level.$anyDirty && v$.level.$invalid">
+              <small class="form-text text-danger" v-for="error of v$.level.$errors" :key="error.$uid">{{ error.$message }}</small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.employee.contract')" for="employee-contract"></label>
+            <select
+              class="form-control"
+              name="contract"
+              :class="{ valid: !v$.contract.$invalid, invalid: v$.contract.$invalid }"
+              v-model="v$.contract.$model"
+              id="employee-contract"
+              data-cy="contract"
+            >
+              <option
+                v-for="contract in contractValues"
+                :key="contract"
+                :value="contract"
+                :label="t$('demoJhVue870App.Contract.' + contract)"
+              >
+                {{ contract }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.employee.cv')" for="employee-cv"></label>
+            <div>
+              <div v-if="employee.cv" class="form-text text-danger clearfix">
+                <a class="pull-left" @click="openFile(employee.cvContentType, employee.cv)" v-text="t$('entity.action.open')"></a><br />
+                <span class="pull-left">{{ employee.cvContentType }}, {{ byteSize(employee.cv) }}</span>
+                <button
+                  type="button"
+                  @click="
+                    employee.cv = null;
+                    employee.cvContentType = null;
+                  "
+                  class="btn btn-secondary btn-xs pull-right"
+                >
+                  <font-awesome-icon icon="times"></font-awesome-icon>
+                </button>
+              </div>
+              <label for="file_cv" v-text="t$('entity.action.addblob')" class="btn btn-primary pull-right"></label>
+              <input
+                type="file"
+                ref="file_cv"
+                id="file_cv"
+                style="display: none"
+                data-cy="cv"
+                @change="setFileData($event, employee, 'cv', false)"
+              />
+            </div>
+            <input
+              type="hidden"
+              class="form-control"
+              name="cv"
+              id="employee-cv"
+              data-cy="cv"
+              :class="{ valid: !v$.cv.$invalid, invalid: v$.cv.$invalid }"
+              v-model="v$.cv.$model"
+            />
+            <input type="hidden" class="form-control" name="cvContentType" id="employee-cvContentType" v-model="employee.cvContentType" />
           </div>
           <div class="form-group">
             <label class="form-control-label" v-text="t$('demoJhVue870App.employee.manager')" for="employee-manager"></label>

@@ -22,7 +22,11 @@
               data-cy="jobTitle"
               :class="{ valid: !v$.jobTitle.$invalid, invalid: v$.jobTitle.$invalid }"
               v-model="v$.jobTitle.$model"
+              required
             />
+            <div v-if="v$.jobTitle.$anyDirty && v$.jobTitle.$invalid">
+              <small class="form-text text-danger" v-for="error of v$.jobTitle.$errors" :key="error.$uid">{{ error.$message }}</small>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-control-label" v-text="t$('demoJhVue870App.job.minSalary')" for="job-minSalary"></label>
@@ -47,6 +51,110 @@
               :class="{ valid: !v$.maxSalary.$invalid, invalid: v$.maxSalary.$invalid }"
               v-model.number="v$.maxSalary.$model"
             />
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.job.subSalary')" for="job-subSalary"></label>
+            <input
+              type="number"
+              class="form-control"
+              name="subSalary"
+              id="job-subSalary"
+              data-cy="subSalary"
+              :class="{ valid: !v$.subSalary.$invalid, invalid: v$.subSalary.$invalid }"
+              v-model.number="v$.subSalary.$model"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.job.totalSalary')" for="job-totalSalary"></label>
+            <input
+              type="number"
+              class="form-control"
+              name="totalSalary"
+              id="job-totalSalary"
+              data-cy="totalSalary"
+              :class="{ valid: !v$.totalSalary.$invalid, invalid: v$.totalSalary.$invalid }"
+              v-model.number="v$.totalSalary.$model"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.job.date')" for="job-date"></label>
+            <b-input-group class="mb-3">
+              <b-input-group-prepend>
+                <b-form-datepicker
+                  aria-controls="job-date"
+                  v-model="v$.date.$model"
+                  name="date"
+                  class="form-control"
+                  :locale="currentLanguage"
+                  button-only
+                  today-button
+                  reset-button
+                  close-button
+                >
+                </b-form-datepicker>
+              </b-input-group-prepend>
+              <b-form-input
+                id="job-date"
+                data-cy="date"
+                type="text"
+                class="form-control"
+                name="date"
+                :class="{ valid: !v$.date.$invalid, invalid: v$.date.$invalid }"
+                v-model="v$.date.$model"
+              />
+            </b-input-group>
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.job.codeCode')" for="job-codeCode"></label>
+            <input
+              type="text"
+              class="form-control"
+              name="codeCode"
+              id="job-codeCode"
+              data-cy="codeCode"
+              :class="{ valid: !v$.codeCode.$invalid, invalid: v$.codeCode.$invalid }"
+              v-model="v$.codeCode.$model"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.job.profil')" for="job-profil"></label>
+            <div>
+              <img :src="'data:' + job.profilContentType + ';base64,' + job.profil" style="max-height: 100px" v-if="job.profil" alt="job" />
+              <div v-if="job.profil" class="form-text text-danger clearfix">
+                <span class="pull-left">{{ job.profilContentType }}, {{ byteSize(job.profil) }}</span>
+                <button
+                  type="button"
+                  @click="clearInputImage('profil', 'profilContentType', 'file_profil')"
+                  class="btn btn-secondary btn-xs pull-right"
+                >
+                  <font-awesome-icon icon="times"></font-awesome-icon>
+                </button>
+              </div>
+              <label for="file_profil" v-text="t$('entity.action.addimage')" class="btn btn-primary pull-right"></label>
+              <input
+                type="file"
+                ref="file_profil"
+                id="file_profil"
+                style="display: none"
+                data-cy="profil"
+                @change="setFileData($event, job, 'profil', true)"
+                accept="image/*"
+              />
+            </div>
+            <input
+              type="hidden"
+              class="form-control"
+              name="profil"
+              id="job-profil"
+              data-cy="profil"
+              :class="{ valid: !v$.profil.$invalid, invalid: v$.profil.$invalid }"
+              v-model="v$.profil.$model"
+              required
+            />
+            <input type="hidden" class="form-control" name="profilContentType" id="job-profilContentType" v-model="job.profilContentType" />
+            <div v-if="v$.profil.$anyDirty && v$.profil.$invalid">
+              <small class="form-text text-danger" v-for="error of v$.profil.$errors" :key="error.$uid">{{ error.$message }}</small>
+            </div>
           </div>
           <div class="form-group">
             <label v-text="t$('demoJhVue870App.job.task')" for="job-task"></label>

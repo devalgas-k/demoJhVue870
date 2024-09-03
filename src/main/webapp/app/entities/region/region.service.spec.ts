@@ -96,7 +96,7 @@ describe('Service Tests', () => {
       });
 
       it('should partial update a Region', async () => {
-        const patchObject = { ...new Region() };
+        const patchObject = { regionName: 'BBBBBB', ...new Region() };
         const returnedFromService = Object.assign(patchObject, elemDefault);
 
         const expected = { ...returnedFromService };
@@ -122,7 +122,7 @@ describe('Service Tests', () => {
         const returnedFromService = { regionName: 'BBBBBB', ...elemDefault };
         const expected = { ...returnedFromService };
         axiosStub.get.resolves([returnedFromService]);
-        return service.retrieve().then(res => {
+        return service.retrieve({ sort: {}, page: 0, size: 10 }).then(res => {
           expect(res).toContainEqual(expected);
         });
       });

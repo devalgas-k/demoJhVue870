@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
 import JobService from './job.service';
+import useDataUtils from '@/shared/data/data-utils.service';
 import { type IJob } from '@/shared/model/job.model';
 import { useAlertService } from '@/shared/alert/alert.service';
 
@@ -12,6 +13,8 @@ export default defineComponent({
   setup() {
     const jobService = inject('jobService', () => new JobService());
     const alertService = inject('alertService', () => useAlertService(), true);
+
+    const dataUtils = useDataUtils();
 
     const route = useRoute();
     const router = useRouter();
@@ -35,6 +38,8 @@ export default defineComponent({
     return {
       alertService,
       job,
+
+      ...dataUtils,
 
       previousState,
       t$: useI18n().t,

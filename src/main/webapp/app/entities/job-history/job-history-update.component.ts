@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 
 import JobHistoryService from './job-history.service';
+import useDataUtils from '@/shared/data/data-utils.service';
 import { useDateFormat, useValidation } from '@/shared/composables';
 import { useAlertService } from '@/shared/alert/alert.service';
 
@@ -50,6 +51,7 @@ export default defineComponent({
         const res = await jobHistoryService().find(jobHistoryId);
         res.startDate = new Date(res.startDate);
         res.endDate = new Date(res.endDate);
+        res.date = new Date(res.date);
         jobHistory.value = res;
       } catch (error) {
         alertService.showHttpError(error.response);
@@ -80,12 +82,17 @@ export default defineComponent({
 
     initRelationships();
 
+    const dataUtils = useDataUtils();
+
     const { t: t$ } = useI18n();
     const validations = useValidation();
     const validationRules = {
       startDate: {},
       endDate: {},
       language: {},
+      file: {},
+      date: {},
+      duration: {},
       job: {},
       department: {},
       employee: {},
@@ -104,6 +111,7 @@ export default defineComponent({
       jobs,
       departments,
       employees,
+      ...dataUtils,
       v$,
       ...useDateFormat({ entityRef: jobHistory }),
       t$,

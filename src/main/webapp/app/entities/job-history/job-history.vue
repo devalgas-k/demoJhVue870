@@ -44,6 +44,18 @@
               <span v-text="t$('demoJhVue870App.jobHistory.language')"></span>
               <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'language'"></jhi-sort-indicator>
             </th>
+            <th scope="row" @click="changeOrder('file')">
+              <span v-text="t$('demoJhVue870App.jobHistory.file')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'file'"></jhi-sort-indicator>
+            </th>
+            <th scope="row" @click="changeOrder('date')">
+              <span v-text="t$('demoJhVue870App.jobHistory.date')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'date'"></jhi-sort-indicator>
+            </th>
+            <th scope="row" @click="changeOrder('duration')">
+              <span v-text="t$('demoJhVue870App.jobHistory.duration')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'duration'"></jhi-sort-indicator>
+            </th>
             <th scope="row" @click="changeOrder('job.id')">
               <span v-text="t$('demoJhVue870App.jobHistory.job')"></span>
               <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'job.id'"></jhi-sort-indicator>
@@ -67,6 +79,16 @@
             <td>{{ formatDateShort(jobHistory.startDate) || '' }}</td>
             <td>{{ formatDateShort(jobHistory.endDate) || '' }}</td>
             <td v-text="t$('demoJhVue870App.Language.' + jobHistory.language)"></td>
+            <td>
+              <a
+                v-if="jobHistory.file"
+                @click="openFile(jobHistory.fileContentType, jobHistory.file)"
+                v-text="t$('entity.action.open')"
+              ></a>
+              <span v-if="jobHistory.file">{{ jobHistory.fileContentType }}, {{ byteSize(jobHistory.file) }}</span>
+            </td>
+            <td>{{ formatDateShort(jobHistory.date) || '' }}</td>
+            <td>{{ formatDuration(jobHistory.duration) }}</td>
             <td>
               <div v-if="jobHistory.job">
                 <router-link :to="{ name: 'JobView', params: { jobId: jobHistory.job.id } }">{{ jobHistory.job.id }}</router-link>
@@ -114,7 +136,6 @@
             </td>
           </tr>
         </tbody>
-        <span ref="infiniteScrollEl"></span>
       </table>
     </div>
     <b-modal ref="removeEntity" id="removeEntity">
@@ -142,6 +163,14 @@
         </div>
       </template>
     </b-modal>
+    <div v-show="jobHistories && jobHistories.length > 0">
+      <div class="row justify-content-center">
+        <jhi-item-count :page="page" :total="queryCount" :itemsPerPage="itemsPerPage"></jhi-item-count>
+      </div>
+      <div class="row justify-content-center">
+        <b-pagination size="md" :total-rows="totalItems" v-model="page" :per-page="itemsPerPage"></b-pagination>
+      </div>
+    </div>
   </div>
 </template>
 

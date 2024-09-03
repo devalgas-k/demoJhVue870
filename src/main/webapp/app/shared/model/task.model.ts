@@ -2,7 +2,7 @@ import { type IJob } from '@/shared/model/job.model';
 
 export interface ITask {
   id?: number;
-  title?: string | null;
+  title?: string;
   description?: string | null;
   jobs?: IJob[] | null;
 }
@@ -10,7 +10,7 @@ export interface ITask {
 export class Task implements ITask {
   constructor(
     public id?: number,
-    public title?: string | null,
+    public title?: string,
     public description?: string | null,
     public jobs?: IJob[] | null,
   ) {}

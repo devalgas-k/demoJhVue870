@@ -96,7 +96,7 @@ describe('Service Tests', () => {
       });
 
       it('should partial update a Task', async () => {
-        const patchObject = { title: 'BBBBBB', description: 'BBBBBB', ...new Task() };
+        const patchObject = { ...new Task() };
         const returnedFromService = Object.assign(patchObject, elemDefault);
 
         const expected = { ...returnedFromService };
@@ -122,7 +122,7 @@ describe('Service Tests', () => {
         const returnedFromService = { title: 'BBBBBB', description: 'BBBBBB', ...elemDefault };
         const expected = { ...returnedFromService };
         axiosStub.get.resolves([returnedFromService]);
-        return service.retrieve().then(res => {
+        return service.retrieve({ sort: {}, page: 0, size: 10 }).then(res => {
           expect(res).toContainEqual(expected);
         });
       });

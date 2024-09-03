@@ -33,7 +33,7 @@ describe('Service Tests', () => {
     beforeEach(() => {
       service = new JobHistoryService();
       currentDate = new Date();
-      elemDefault = new JobHistory(123, currentDate, currentDate, 'FRENCH');
+      elemDefault = new JobHistory(123, currentDate, currentDate, 'FRENCH', 'image/png', 'AAAAAAA', currentDate, 'PT1S');
     });
 
     describe('Service methods', () => {
@@ -41,6 +41,7 @@ describe('Service Tests', () => {
         const returnedFromService = {
           startDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
           endDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
+          date: dayjs(currentDate).format(DATE_TIME_FORMAT),
           ...elemDefault,
         };
         axiosStub.get.resolves({ data: returnedFromService });
@@ -65,9 +66,10 @@ describe('Service Tests', () => {
           id: 123,
           startDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
           endDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
+          date: dayjs(currentDate).format(DATE_TIME_FORMAT),
           ...elemDefault,
         };
-        const expected = { startDate: currentDate, endDate: currentDate, ...returnedFromService };
+        const expected = { startDate: currentDate, endDate: currentDate, date: currentDate, ...returnedFromService };
 
         axiosStub.post.resolves({ data: returnedFromService });
         return service.create({}).then(res => {
@@ -91,10 +93,13 @@ describe('Service Tests', () => {
           startDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
           endDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
           language: 'BBBBBB',
+          file: 'BBBBBB',
+          date: dayjs(currentDate).format(DATE_TIME_FORMAT),
+          duration: 'PT2S',
           ...elemDefault,
         };
 
-        const expected = { startDate: currentDate, endDate: currentDate, ...returnedFromService };
+        const expected = { startDate: currentDate, endDate: currentDate, date: currentDate, ...returnedFromService };
         axiosStub.put.resolves({ data: returnedFromService });
 
         return service.update(expected).then(res => {
@@ -114,10 +119,15 @@ describe('Service Tests', () => {
       });
 
       it('should partial update a JobHistory', async () => {
-        const patchObject = { startDate: dayjs(currentDate).format(DATE_TIME_FORMAT), ...new JobHistory() };
+        const patchObject = {
+          endDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
+          language: 'BBBBBB',
+          file: 'BBBBBB',
+          ...new JobHistory(),
+        };
         const returnedFromService = Object.assign(patchObject, elemDefault);
 
-        const expected = { startDate: currentDate, endDate: currentDate, ...returnedFromService };
+        const expected = { startDate: currentDate, endDate: currentDate, date: currentDate, ...returnedFromService };
         axiosStub.patch.resolves({ data: returnedFromService });
 
         return service.partialUpdate(patchObject).then(res => {
@@ -141,9 +151,12 @@ describe('Service Tests', () => {
           startDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
           endDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
           language: 'BBBBBB',
+          file: 'BBBBBB',
+          date: dayjs(currentDate).format(DATE_TIME_FORMAT),
+          duration: 'PT2S',
           ...elemDefault,
         };
-        const expected = { startDate: currentDate, endDate: currentDate, ...returnedFromService };
+        const expected = { startDate: currentDate, endDate: currentDate, date: currentDate, ...returnedFromService };
         axiosStub.get.resolves([returnedFromService]);
         return service.retrieve({ sort: {}, page: 0, size: 10 }).then(res => {
           expect(res).toContainEqual(expected);

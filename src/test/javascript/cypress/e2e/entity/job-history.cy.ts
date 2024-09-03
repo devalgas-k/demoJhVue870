@@ -160,16 +160,28 @@ describe('JobHistory e2e test', () => {
     });
 
     it('should create an instance of JobHistory', () => {
-      cy.get(`[data-cy="startDate"]`).type('2024-09-02T05:38');
+      cy.get(`[data-cy="startDate"]`).type('2024-09-02T19:57');
       cy.get(`[data-cy="startDate"]`).blur();
-      cy.get(`[data-cy="startDate"]`).should('have.value', '2024-09-02T05:38');
+      cy.get(`[data-cy="startDate"]`).should('have.value', '2024-09-02T19:57');
 
-      cy.get(`[data-cy="endDate"]`).type('2024-09-02T21:12');
+      cy.get(`[data-cy="endDate"]`).type('2024-09-02T17:53');
       cy.get(`[data-cy="endDate"]`).blur();
-      cy.get(`[data-cy="endDate"]`).should('have.value', '2024-09-02T21:12');
+      cy.get(`[data-cy="endDate"]`).should('have.value', '2024-09-02T17:53');
 
-      cy.get(`[data-cy="language"]`).select('ENGLISH');
+      cy.get(`[data-cy="language"]`).select('SPANISH');
 
+      cy.setFieldImageAsBytesOfEntity('file', 'integration-test.png', 'image/png');
+
+      cy.get(`[data-cy="date"]`).type('2024-09-03T02:39');
+      cy.get(`[data-cy="date"]`).blur();
+      cy.get(`[data-cy="date"]`).should('have.value', '2024-09-03T02:39');
+
+      cy.get(`[data-cy="duration"]`).type('PT15M');
+      cy.get(`[data-cy="duration"]`).blur();
+      cy.get(`[data-cy="duration"]`).should('have.value', 'PT15M');
+
+      // since cypress clicks submit too fast before the blob fields are validated
+      cy.wait(200); // eslint-disable-line cypress/no-unnecessary-waiting
       cy.get(entityCreateSaveButtonSelector).click();
 
       cy.wait('@postEntityRequest').then(({ response }) => {

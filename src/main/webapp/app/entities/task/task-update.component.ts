@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 
 import TaskService from './task.service';
+import useDataUtils from '@/shared/data/data-utils.service';
 import { useValidation } from '@/shared/composables';
 import { useAlertService } from '@/shared/alert/alert.service';
 
@@ -54,10 +55,15 @@ export default defineComponent({
 
     initRelationships();
 
+    const dataUtils = useDataUtils();
+
     const { t: t$ } = useI18n();
     const validations = useValidation();
     const validationRules = {
-      title: {},
+      title: {
+        required: validations.required(t$('entity.validation.required').toString()),
+        maxLength: validations.maxLength(t$('entity.validation.maxlength', { max: 256 }).toString(), 256),
+      },
       description: {},
       jobs: {},
     };
@@ -72,6 +78,7 @@ export default defineComponent({
       isSaving,
       currentLanguage,
       jobs,
+      ...dataUtils,
       v$,
       t$,
     };

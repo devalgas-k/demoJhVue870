@@ -49,6 +49,27 @@
             <span>{{ employee.commissionPct }}</span>
           </dd>
           <dt>
+            <span v-text="t$('demoJhVue870App.employee.level')"></span>
+          </dt>
+          <dd>
+            <span>{{ employee.level }}</span>
+          </dd>
+          <dt>
+            <span v-text="t$('demoJhVue870App.employee.contract')"></span>
+          </dt>
+          <dd>
+            <span v-text="t$('demoJhVue870App.Contract.' + employee.contract)"></span>
+          </dd>
+          <dt>
+            <span v-text="t$('demoJhVue870App.employee.cv')"></span>
+          </dt>
+          <dd>
+            <div v-if="employee.cv">
+              <a @click="openFile(employee.cvContentType, employee.cv)" v-text="t$('entity.action.open')"></a>
+              {{ employee.cvContentType }}, {{ byteSize(employee.cv) }}
+            </div>
+          </dd>
+          <dt>
             <span v-text="t$('demoJhVue870App.employee.manager')"></span>
           </dt>
           <dd>

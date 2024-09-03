@@ -4,6 +4,7 @@
   },
   "applications": "*",
   "documentation": "not an ignored comment",
+  "dto": "mapstruct",
   "fields": [
     {
       "fieldName": "streetAddress",
@@ -23,6 +24,7 @@
     }
   ],
   "name": "Location",
+  "pagination": "pagination",
   "relationships": [
     {
       "otherEntityName": "country",

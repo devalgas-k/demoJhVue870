@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n';
 
 import JobService from './job.service';
 import { type IJob } from '@/shared/model/job.model';
+import useDataUtils from '@/shared/data/data-utils.service';
 import { useAlertService } from '@/shared/alert/alert.service';
 
 export default defineComponent({
@@ -10,6 +11,7 @@ export default defineComponent({
   name: 'Job',
   setup() {
     const { t: t$ } = useI18n();
+    const dataUtils = useDataUtils();
     const jobService = inject('jobService', () => new JobService());
     const alertService = inject('alertService', () => useAlertService(), true);
 
@@ -129,6 +131,7 @@ export default defineComponent({
       totalItems,
       changeOrder,
       t$,
+      ...dataUtils,
     };
   },
 });

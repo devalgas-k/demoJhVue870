@@ -91,6 +91,9 @@ describe('Region e2e test', () => {
             },
             {
               statusCode: 200,
+              headers: {
+                link: '<http://localhost/api/regions?page=0&size=20>; rel="last",<http://localhost/api/regions?page=0&size=20>; rel="first"',
+              },
               body: [region],
             },
           ).as('entitiesRequestInternal');
@@ -157,8 +160,8 @@ describe('Region e2e test', () => {
     });
 
     it('should create an instance of Region', () => {
-      cy.get(`[data-cy="regionName"]`).type('bof timide afin que');
-      cy.get(`[data-cy="regionName"]`).should('have.value', 'bof timide afin que');
+      cy.get(`[data-cy="regionName"]`).type('Qxgir4');
+      cy.get(`[data-cy="regionName"]`).should('have.value', 'Qxgir4');
 
       cy.get(entityCreateSaveButtonSelector).click();
 

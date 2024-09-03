@@ -4,12 +4,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 
 import EmployeeService from './employee.service';
+import useDataUtils from '@/shared/data/data-utils.service';
 import { useDateFormat, useValidation } from '@/shared/composables';
 import { useAlertService } from '@/shared/alert/alert.service';
 
 import DepartmentService from '@/entities/department/department.service';
 import { type IDepartment } from '@/shared/model/department.model';
 import { Employee, type IEmployee } from '@/shared/model/employee.model';
+import { Contract } from '@/shared/model/enumerations/contract.model';
 
 export default defineComponent({
   compatConfig: { MODE: 3 },
@@ -25,6 +27,7 @@ export default defineComponent({
     const departmentService = inject('departmentService', () => new DepartmentService());
 
     const departments: Ref<IDepartment[]> = ref([]);
+    const contractValues: Ref<string[]> = ref(Object.keys(Contract));
     const isSaving = ref(false);
     const currentLanguage = inject('currentLanguage', () => computed(() => navigator.language ?? 'fr'), true);
 
@@ -62,16 +65,27 @@ export default defineComponent({
 
     initRelationships();
 
+    const dataUtils = useDataUtils();
+
     const { t: t$ } = useI18n();
     const validations = useValidation();
     const validationRules = {
       firstName: {},
       lastName: {},
-      email: {},
+      email: {
+        required: validations.required(t$('entity.validation.required').toString()),
+      },
       phoneNumber: {},
       hireDate: {},
       salary: {},
       commissionPct: {},
+      level: {
+        integer: validations.integer(t$('entity.validation.number').toString()),
+        min: validations.minValue(t$('entity.validation.min', { min: 1 }).toString(), 1),
+        max: validations.maxValue(t$('entity.validation.max', { max: 14 }).toString(), 14),
+      },
+      contract: {},
+      cv: {},
       manager: {},
       department: {},
     };
@@ -83,10 +97,12 @@ export default defineComponent({
       alertService,
       employee,
       previousState,
+      contractValues,
       isSaving,
       currentLanguage,
       employees,
       departments,
+      ...dataUtils,
       v$,
       ...useDateFormat({ entityRef: employee }),
       t$,

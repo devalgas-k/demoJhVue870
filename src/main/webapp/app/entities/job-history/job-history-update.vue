@@ -63,6 +63,78 @@
             </select>
           </div>
           <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.jobHistory.file')" for="job-history-file"></label>
+            <div>
+              <div v-if="jobHistory.file" class="form-text text-danger clearfix">
+                <a class="pull-left" @click="openFile(jobHistory.fileContentType, jobHistory.file)" v-text="t$('entity.action.open')"></a
+                ><br />
+                <span class="pull-left">{{ jobHistory.fileContentType }}, {{ byteSize(jobHistory.file) }}</span>
+                <button
+                  type="button"
+                  @click="
+                    jobHistory.file = null;
+                    jobHistory.fileContentType = null;
+                  "
+                  class="btn btn-secondary btn-xs pull-right"
+                >
+                  <font-awesome-icon icon="times"></font-awesome-icon>
+                </button>
+              </div>
+              <label for="file_file" v-text="t$('entity.action.addblob')" class="btn btn-primary pull-right"></label>
+              <input
+                type="file"
+                ref="file_file"
+                id="file_file"
+                style="display: none"
+                data-cy="file"
+                @change="setFileData($event, jobHistory, 'file', false)"
+              />
+            </div>
+            <input
+              type="hidden"
+              class="form-control"
+              name="file"
+              id="job-history-file"
+              data-cy="file"
+              :class="{ valid: !v$.file.$invalid, invalid: v$.file.$invalid }"
+              v-model="v$.file.$model"
+            />
+            <input
+              type="hidden"
+              class="form-control"
+              name="fileContentType"
+              id="job-history-fileContentType"
+              v-model="jobHistory.fileContentType"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.jobHistory.date')" for="job-history-date"></label>
+            <div class="d-flex">
+              <input
+                id="job-history-date"
+                data-cy="date"
+                type="datetime-local"
+                class="form-control"
+                name="date"
+                :class="{ valid: !v$.date.$invalid, invalid: v$.date.$invalid }"
+                :value="convertDateTimeFromServer(v$.date.$model)"
+                @change="updateZonedDateTimeField('date', $event)"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-control-label" v-text="t$('demoJhVue870App.jobHistory.duration')" for="job-history-duration"></label>
+            <input
+              type="text"
+              class="form-control"
+              name="duration"
+              id="job-history-duration"
+              data-cy="duration"
+              :class="{ valid: !v$.duration.$invalid, invalid: v$.duration.$invalid }"
+              v-model="v$.duration.$model"
+            />
+          </div>
+          <div class="form-group">
             <label class="form-control-label" v-text="t$('demoJhVue870App.jobHistory.job')" for="job-history-job"></label>
             <select class="form-control" id="job-history-job" data-cy="job" name="job" v-model="jobHistory.job">
               <option :value="null"></option>

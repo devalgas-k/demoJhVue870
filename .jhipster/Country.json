@@ -3,6 +3,7 @@
     "changelogDate": "20240903035050"
   },
   "applications": "*",
+  "dto": "mapstruct",
   "fields": [
     {
       "fieldName": "countryName",
@@ -10,6 +11,7 @@
     }
   ],
   "name": "Country",
+  "pagination": "pagination",
   "relationships": [
     {
       "otherEntityName": "region",

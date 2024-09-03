@@ -28,8 +28,14 @@
       <table class="table table-striped" aria-describedby="regions">
         <thead>
           <tr>
-            <th scope="row"><span v-text="t$('global.field.id')"></span></th>
-            <th scope="row"><span v-text="t$('demoJhVue870App.region.regionName')"></span></th>
+            <th scope="row" @click="changeOrder('id')">
+              <span v-text="t$('global.field.id')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'id'"></jhi-sort-indicator>
+            </th>
+            <th scope="row" @click="changeOrder('regionName')">
+              <span v-text="t$('demoJhVue870App.region.regionName')"></span>
+              <jhi-sort-indicator :current-order="propOrder" :reverse="reverse" :field-name="'regionName'"></jhi-sort-indicator>
+            </th>
             <th scope="row"></th>
           </tr>
         </thead>
@@ -90,6 +96,14 @@
         </div>
       </template>
     </b-modal>
+    <div v-show="regions && regions.length > 0">
+      <div class="row justify-content-center">
+        <jhi-item-count :page="page" :total="queryCount" :itemsPerPage="itemsPerPage"></jhi-item-count>
+      </div>
+      <div class="row justify-content-center">
+        <b-pagination size="md" :total-rows="totalItems" v-model="page" :per-page="itemsPerPage"></b-pagination>
+      </div>
+    </div>
   </div>
 </template>
 

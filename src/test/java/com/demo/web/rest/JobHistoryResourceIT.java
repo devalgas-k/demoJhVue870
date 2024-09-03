@@ -2,6 +2,7 @@ package com.demo.web.rest;
 
 import static com.demo.domain.JobHistoryAsserts.*;
 import static com.demo.web.rest.TestUtil.createUpdateProxyForBean;
+import static com.demo.web.rest.TestUtil.sameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -11,10 +12,17 @@ import com.demo.IntegrationTest;
 import com.demo.domain.JobHistory;
 import com.demo.domain.enumeration.Language;
 import com.demo.repository.JobHistoryRepository;
+import com.demo.service.dto.JobHistoryDTO;
+import com.demo.service.mapper.JobHistoryMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.AfterEach;
@@ -44,6 +52,17 @@ class JobHistoryResourceIT {
     private static final Language DEFAULT_LANGUAGE = Language.FRENCH;
     private static final Language UPDATED_LANGUAGE = Language.ENGLISH;
 
+    private static final byte[] DEFAULT_FILE = TestUtil.createByteArray(1, "0");
+    private static final byte[] UPDATED_FILE = TestUtil.createByteArray(1, "1");
+    private static final String DEFAULT_FILE_CONTENT_TYPE = "image/jpg";
+    private static final String UPDATED_FILE_CONTENT_TYPE = "image/png";
+
+    private static final ZonedDateTime DEFAULT_DATE = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
+    private static final ZonedDateTime UPDATED_DATE = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
+
+    private static final Duration DEFAULT_DURATION = Duration.ofHours(6);
+    private static final Duration UPDATED_DURATION = Duration.ofHours(12);
+
     private static final String ENTITY_API_URL = "/api/job-histories";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
 
@@ -55,6 +74,9 @@ class JobHistoryResourceIT {
 
     @Autowired
     private JobHistoryRepository jobHistoryRepository;
+
+    @Autowired
+    private JobHistoryMapper jobHistoryMapper;
 
     @Autowired
     private EntityManager em;
@@ -73,7 +95,14 @@ class JobHistoryResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static JobHistory createEntity() {
-        return new JobHistory().startDate(DEFAULT_START_DATE).endDate(DEFAULT_END_DATE).language(DEFAULT_LANGUAGE);
+        return new JobHistory()
+            .startDate(DEFAULT_START_DATE)
+            .endDate(DEFAULT_END_DATE)
+            .language(DEFAULT_LANGUAGE)
+            .file(DEFAULT_FILE)
+            .fileContentType(DEFAULT_FILE_CONTENT_TYPE)
+            .date(DEFAULT_DATE)
+            .duration(DEFAULT_DURATION);
     }
 
     /**
@@ -83,7 +112,14 @@ class JobHistoryResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static JobHistory createUpdatedEntity() {
-        return new JobHistory().startDate(UPDATED_START_DATE).endDate(UPDATED_END_DATE).language(UPDATED_LANGUAGE);
+        return new JobHistory()
+            .startDate(UPDATED_START_DATE)
+            .endDate(UPDATED_END_DATE)
+            .language(UPDATED_LANGUAGE)
+            .file(UPDATED_FILE)
+            .fileContentType(UPDATED_FILE_CONTENT_TYPE)
+            .date(UPDATED_DATE)
+            .duration(UPDATED_DURATION);
     }
 
     @BeforeEach
@@ -104,18 +140,20 @@ class JobHistoryResourceIT {
     void createJobHistory() throws Exception {
         long databaseSizeBeforeCreate = getRepositoryCount();
         // Create the JobHistory
-        var returnedJobHistory = om.readValue(
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(jobHistory);
+        var returnedJobHistoryDTO = om.readValue(
             restJobHistoryMockMvc
-                .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobHistory)))
+                .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobHistoryDTO)))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString(),
-            JobHistory.class
+            JobHistoryDTO.class
         );
 
         // Validate the JobHistory in the database
         assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
+        var returnedJobHistory = jobHistoryMapper.toEntity(returnedJobHistoryDTO);
         assertJobHistoryUpdatableFieldsEquals(returnedJobHistory, getPersistedJobHistory(returnedJobHistory));
 
         insertedJobHistory = returnedJobHistory;
@@ -126,12 +164,13 @@ class JobHistoryResourceIT {
     void createJobHistoryWithExistingId() throws Exception {
         // Create the JobHistory with an existing ID
         jobHistory.setId(1L);
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(jobHistory);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restJobHistoryMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobHistory)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobHistoryDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the JobHistory in the database
@@ -152,7 +191,11 @@ class JobHistoryResourceIT {
             .andExpect(jsonPath("$.[*].id").value(hasItem(jobHistory.getId().intValue())))
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
-            .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_LANGUAGE.toString())));
+            .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_LANGUAGE.toString())))
+            .andExpect(jsonPath("$.[*].fileContentType").value(hasItem(DEFAULT_FILE_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].file").value(hasItem(Base64.getEncoder().encodeToString(DEFAULT_FILE))))
+            .andExpect(jsonPath("$.[*].date").value(hasItem(sameInstant(DEFAULT_DATE))))
+            .andExpect(jsonPath("$.[*].duration").value(hasItem(DEFAULT_DURATION.toString())));
     }
 
     @Test
@@ -169,7 +212,11 @@ class JobHistoryResourceIT {
             .andExpect(jsonPath("$.id").value(jobHistory.getId().intValue()))
             .andExpect(jsonPath("$.startDate").value(DEFAULT_START_DATE.toString()))
             .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()))
-            .andExpect(jsonPath("$.language").value(DEFAULT_LANGUAGE.toString()));
+            .andExpect(jsonPath("$.language").value(DEFAULT_LANGUAGE.toString()))
+            .andExpect(jsonPath("$.fileContentType").value(DEFAULT_FILE_CONTENT_TYPE))
+            .andExpect(jsonPath("$.file").value(Base64.getEncoder().encodeToString(DEFAULT_FILE)))
+            .andExpect(jsonPath("$.date").value(sameInstant(DEFAULT_DATE)))
+            .andExpect(jsonPath("$.duration").value(DEFAULT_DURATION.toString()));
     }
 
     @Test
@@ -191,13 +238,21 @@ class JobHistoryResourceIT {
         JobHistory updatedJobHistory = jobHistoryRepository.findById(jobHistory.getId()).orElseThrow();
         // Disconnect from session so that the updates on updatedJobHistory are not directly saved in db
         em.detach(updatedJobHistory);
-        updatedJobHistory.startDate(UPDATED_START_DATE).endDate(UPDATED_END_DATE).language(UPDATED_LANGUAGE);
+        updatedJobHistory
+            .startDate(UPDATED_START_DATE)
+            .endDate(UPDATED_END_DATE)
+            .language(UPDATED_LANGUAGE)
+            .file(UPDATED_FILE)
+            .fileContentType(UPDATED_FILE_CONTENT_TYPE)
+            .date(UPDATED_DATE)
+            .duration(UPDATED_DURATION);
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(updatedJobHistory);
 
         restJobHistoryMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, updatedJobHistory.getId())
+                put(ENTITY_API_URL_ID, jobHistoryDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(updatedJobHistory))
+                    .content(om.writeValueAsBytes(jobHistoryDTO))
             )
             .andExpect(status().isOk());
 
@@ -212,10 +267,15 @@ class JobHistoryResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         jobHistory.setId(longCount.incrementAndGet());
 
+        // Create the JobHistory
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(jobHistory);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restJobHistoryMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, jobHistory.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobHistory))
+                put(ENTITY_API_URL_ID, jobHistoryDTO.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(om.writeValueAsBytes(jobHistoryDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -229,12 +289,15 @@ class JobHistoryResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         jobHistory.setId(longCount.incrementAndGet());
 
+        // Create the JobHistory
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(jobHistory);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restJobHistoryMockMvc
             .perform(
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(jobHistory))
+                    .content(om.writeValueAsBytes(jobHistoryDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -248,9 +311,12 @@ class JobHistoryResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         jobHistory.setId(longCount.incrementAndGet());
 
+        // Create the JobHistory
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(jobHistory);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restJobHistoryMockMvc
-            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobHistory)))
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(jobHistoryDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the JobHistory in the database
@@ -269,7 +335,11 @@ class JobHistoryResourceIT {
         JobHistory partialUpdatedJobHistory = new JobHistory();
         partialUpdatedJobHistory.setId(jobHistory.getId());
 
-        partialUpdatedJobHistory.endDate(UPDATED_END_DATE).language(UPDATED_LANGUAGE);
+        partialUpdatedJobHistory
+            .endDate(UPDATED_END_DATE)
+            .language(UPDATED_LANGUAGE)
+            .file(UPDATED_FILE)
+            .fileContentType(UPDATED_FILE_CONTENT_TYPE);
 
         restJobHistoryMockMvc
             .perform(
@@ -300,7 +370,14 @@ class JobHistoryResourceIT {
         JobHistory partialUpdatedJobHistory = new JobHistory();
         partialUpdatedJobHistory.setId(jobHistory.getId());
 
-        partialUpdatedJobHistory.startDate(UPDATED_START_DATE).endDate(UPDATED_END_DATE).language(UPDATED_LANGUAGE);
+        partialUpdatedJobHistory
+            .startDate(UPDATED_START_DATE)
+            .endDate(UPDATED_END_DATE)
+            .language(UPDATED_LANGUAGE)
+            .file(UPDATED_FILE)
+            .fileContentType(UPDATED_FILE_CONTENT_TYPE)
+            .date(UPDATED_DATE)
+            .duration(UPDATED_DURATION);
 
         restJobHistoryMockMvc
             .perform(
@@ -322,12 +399,15 @@ class JobHistoryResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         jobHistory.setId(longCount.incrementAndGet());
 
+        // Create the JobHistory
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(jobHistory);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restJobHistoryMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, jobHistory.getId())
+                patch(ENTITY_API_URL_ID, jobHistoryDTO.getId())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(jobHistory))
+                    .content(om.writeValueAsBytes(jobHistoryDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -341,12 +421,15 @@ class JobHistoryResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         jobHistory.setId(longCount.incrementAndGet());
 
+        // Create the JobHistory
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(jobHistory);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restJobHistoryMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(jobHistory))
+                    .content(om.writeValueAsBytes(jobHistoryDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -360,9 +443,12 @@ class JobHistoryResourceIT {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         jobHistory.setId(longCount.incrementAndGet());
 
+        // Create the JobHistory
+        JobHistoryDTO jobHistoryDTO = jobHistoryMapper.toDto(jobHistory);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restJobHistoryMockMvc
-            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(om.writeValueAsBytes(jobHistory)))
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(om.writeValueAsBytes(jobHistoryDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the JobHistory in the database

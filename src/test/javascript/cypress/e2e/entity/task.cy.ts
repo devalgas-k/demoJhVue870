@@ -15,7 +15,7 @@ describe('Task e2e test', () => {
   const taskPageUrlPattern = new RegExp('/task(\\?.*)?$');
   const username = Cypress.env('E2E_USERNAME') ?? 'user';
   const password = Cypress.env('E2E_PASSWORD') ?? 'user';
-  const taskSample = {};
+  const taskSample = { title: 'X?k"j!' };
 
   let task;
 
@@ -91,6 +91,9 @@ describe('Task e2e test', () => {
             },
             {
               statusCode: 200,
+              headers: {
+                link: '<http://localhost/api/tasks?page=0&size=20>; rel="last",<http://localhost/api/tasks?page=0&size=20>; rel="first"',
+              },
               body: [task],
             },
           ).as('entitiesRequestInternal');
@@ -157,11 +160,11 @@ describe('Task e2e test', () => {
     });
 
     it('should create an instance of Task', () => {
-      cy.get(`[data-cy="title"]`).type('hypocrite infime loin de');
-      cy.get(`[data-cy="title"]`).should('have.value', 'hypocrite infime loin de');
+      cy.get(`[data-cy="title"]`).type('HwxU');
+      cy.get(`[data-cy="title"]`).should('have.value', 'HwxU');
 
-      cy.get(`[data-cy="description"]`).type('ouin vorace');
-      cy.get(`[data-cy="description"]`).should('have.value', 'ouin vorace');
+      cy.get(`[data-cy="description"]`).type('../fake-data/blob/hipster.txt');
+      cy.get(`[data-cy="description"]`).invoke('val').should('match', new RegExp('../fake-data/blob/hipster.txt'));
 
       cy.get(entityCreateSaveButtonSelector).click();
 

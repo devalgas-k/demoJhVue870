@@ -1,5 +1,6 @@
 package com.demo.domain;
 
+import static com.demo.domain.AssertUtils.zonedDataTimeSameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JobHistoryAsserts {
@@ -49,7 +50,11 @@ public class JobHistoryAsserts {
             .as("Verify JobHistory relevant properties")
             .satisfies(e -> assertThat(e.getStartDate()).as("check startDate").isEqualTo(actual.getStartDate()))
             .satisfies(e -> assertThat(e.getEndDate()).as("check endDate").isEqualTo(actual.getEndDate()))
-            .satisfies(e -> assertThat(e.getLanguage()).as("check language").isEqualTo(actual.getLanguage()));
+            .satisfies(e -> assertThat(e.getLanguage()).as("check language").isEqualTo(actual.getLanguage()))
+            .satisfies(e -> assertThat(e.getFile()).as("check file").isEqualTo(actual.getFile()))
+            .satisfies(e -> assertThat(e.getFileContentType()).as("check file contenty type").isEqualTo(actual.getFileContentType()))
+            .satisfies(e -> assertThat(e.getDate()).as("check date").usingComparator(zonedDataTimeSameInstant).isEqualTo(actual.getDate()))
+            .satisfies(e -> assertThat(e.getDuration()).as("check duration").isEqualTo(actual.getDuration()));
     }
 
     /**

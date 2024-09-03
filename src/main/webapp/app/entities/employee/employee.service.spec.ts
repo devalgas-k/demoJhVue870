@@ -33,7 +33,7 @@ describe('Service Tests', () => {
     beforeEach(() => {
       service = new EmployeeService();
       currentDate = new Date();
-      elemDefault = new Employee(123, 'AAAAAAA', 'AAAAAAA', 'AAAAAAA', 'AAAAAAA', currentDate, 0, 0);
+      elemDefault = new Employee(123, 'AAAAAAA', 'AAAAAAA', 'AAAAAAA', 'AAAAAAA', currentDate, 0, 0, 0, 'CDI', 'image/png', 'AAAAAAA');
     });
 
     describe('Service methods', () => {
@@ -86,6 +86,9 @@ describe('Service Tests', () => {
           hireDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
           salary: 1,
           commissionPct: 1,
+          level: 1,
+          contract: 'BBBBBB',
+          cv: 'BBBBBB',
           ...elemDefault,
         };
 
@@ -109,7 +112,15 @@ describe('Service Tests', () => {
       });
 
       it('should partial update a Employee', async () => {
-        const patchObject = { firstName: 'BBBBBB', phoneNumber: 'BBBBBB', salary: 1, ...new Employee() };
+        const patchObject = {
+          lastName: 'BBBBBB',
+          email: 'BBBBBB',
+          salary: 1,
+          commissionPct: 1,
+          level: 1,
+          contract: 'BBBBBB',
+          ...new Employee(),
+        };
         const returnedFromService = Object.assign(patchObject, elemDefault);
 
         const expected = { hireDate: currentDate, ...returnedFromService };
@@ -140,6 +151,9 @@ describe('Service Tests', () => {
           hireDate: dayjs(currentDate).format(DATE_TIME_FORMAT),
           salary: 1,
           commissionPct: 1,
+          level: 1,
+          contract: 'BBBBBB',
+          cv: 'BBBBBB',
           ...elemDefault,
         };
         const expected = { hireDate: currentDate, ...returnedFromService };

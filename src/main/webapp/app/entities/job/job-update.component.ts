@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 
 import JobService from './job.service';
+import useDataUtils from '@/shared/data/data-utils.service';
 import { useValidation } from '@/shared/composables';
 import { useAlertService } from '@/shared/alert/alert.service';
 
@@ -65,12 +66,23 @@ export default defineComponent({
 
     initRelationships();
 
+    const dataUtils = useDataUtils();
+
     const { t: t$ } = useI18n();
     const validations = useValidation();
     const validationRules = {
-      jobTitle: {},
+      jobTitle: {
+        required: validations.required(t$('entity.validation.required').toString()),
+      },
       minSalary: {},
       maxSalary: {},
+      subSalary: {},
+      totalSalary: {},
+      date: {},
+      codeCode: {},
+      profil: {
+        required: validations.required(t$('entity.validation.required').toString()),
+      },
       tasks: {},
       employee: {},
     };
@@ -86,6 +98,7 @@ export default defineComponent({
       currentLanguage,
       tasks,
       employees,
+      ...dataUtils,
       v$,
       t$,
     };
@@ -120,6 +133,20 @@ export default defineComponent({
             this.isSaving = false;
             this.alertService.showHttpError(error.response);
           });
+      }
+    },
+
+    clearInputImage(field, fieldContentType, idInput): void {
+      if (this.job && field && fieldContentType) {
+        if (Object.hasOwn(this.job, field)) {
+          this.job[field] = null;
+        }
+        if (Object.hasOwn(this.job, fieldContentType)) {
+          this.job[fieldContentType] = null;
+        }
+        if (idInput) {
+          (<any>this).$refs[idInput] = null;
+        }
       }
     },
 

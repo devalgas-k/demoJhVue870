@@ -1,5 +1,6 @@
 package com.demo.domain;
 
+import static com.demo.domain.AssertUtils.bigDecimalCompareTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JobAsserts {
@@ -48,8 +49,16 @@ public class JobAsserts {
         assertThat(expected)
             .as("Verify Job relevant properties")
             .satisfies(e -> assertThat(e.getJobTitle()).as("check jobTitle").isEqualTo(actual.getJobTitle()))
-            .satisfies(e -> assertThat(e.getMinSalary()).as("check minSalary").isEqualTo(actual.getMinSalary()))
-            .satisfies(e -> assertThat(e.getMaxSalary()).as("check maxSalary").isEqualTo(actual.getMaxSalary()));
+            .satisfies(e ->
+                assertThat(e.getMinSalary()).as("check minSalary").usingComparator(bigDecimalCompareTo).isEqualTo(actual.getMinSalary())
+            )
+            .satisfies(e -> assertThat(e.getMaxSalary()).as("check maxSalary").isEqualTo(actual.getMaxSalary()))
+            .satisfies(e -> assertThat(e.getSubSalary()).as("check subSalary").isEqualTo(actual.getSubSalary()))
+            .satisfies(e -> assertThat(e.getTotalSalary()).as("check totalSalary").isEqualTo(actual.getTotalSalary()))
+            .satisfies(e -> assertThat(e.getDate()).as("check date").isEqualTo(actual.getDate()))
+            .satisfies(e -> assertThat(e.getCodeCode()).as("check codeCode").isEqualTo(actual.getCodeCode()))
+            .satisfies(e -> assertThat(e.getProfil()).as("check profil").isEqualTo(actual.getProfil()))
+            .satisfies(e -> assertThat(e.getProfilContentType()).as("check profil contenty type").isEqualTo(actual.getProfilContentType()));
     }
 
     /**

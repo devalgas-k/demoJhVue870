@@ -53,7 +53,11 @@ public class EmployeeAsserts {
             .satisfies(e -> assertThat(e.getPhoneNumber()).as("check phoneNumber").isEqualTo(actual.getPhoneNumber()))
             .satisfies(e -> assertThat(e.getHireDate()).as("check hireDate").isEqualTo(actual.getHireDate()))
             .satisfies(e -> assertThat(e.getSalary()).as("check salary").isEqualTo(actual.getSalary()))
-            .satisfies(e -> assertThat(e.getCommissionPct()).as("check commissionPct").isEqualTo(actual.getCommissionPct()));
+            .satisfies(e -> assertThat(e.getCommissionPct()).as("check commissionPct").isEqualTo(actual.getCommissionPct()))
+            .satisfies(e -> assertThat(e.getLevel()).as("check level").isEqualTo(actual.getLevel()))
+            .satisfies(e -> assertThat(e.getContract()).as("check contract").isEqualTo(actual.getContract()))
+            .satisfies(e -> assertThat(e.getCv()).as("check cv").isEqualTo(actual.getCv()))
+            .satisfies(e -> assertThat(e.getCvContentType()).as("check cv contenty type").isEqualTo(actual.getCvContentType()));
     }
 
     /**

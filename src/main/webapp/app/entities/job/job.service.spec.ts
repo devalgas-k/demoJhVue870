@@ -1,8 +1,10 @@
 /* tslint:disable max-line-length */
 import axios from 'axios';
 import sinon from 'sinon';
+import dayjs from 'dayjs';
 
 import JobService from './job.service';
+import { DATE_FORMAT } from '@/shared/composables/date-format';
 import { Job } from '@/shared/model/job.model';
 
 const error = {
@@ -26,15 +28,17 @@ describe('Service Tests', () => {
   describe('Job Service', () => {
     let service: JobService;
     let elemDefault;
+    let currentDate: Date;
 
     beforeEach(() => {
       service = new JobService();
-      elemDefault = new Job(123, 'AAAAAAA', 0, 0);
+      currentDate = new Date();
+      elemDefault = new Job(123, 'AAAAAAA', 0, 0, 0, 0, currentDate, 'AAAAAAA', 'image/png', 'AAAAAAA');
     });
 
     describe('Service methods', () => {
       it('should find an element', async () => {
-        const returnedFromService = { ...elemDefault };
+        const returnedFromService = { date: dayjs(currentDate).format(DATE_FORMAT), ...elemDefault };
         axiosStub.get.resolves({ data: returnedFromService });
 
         return service.find(123).then(res => {
@@ -53,8 +57,8 @@ describe('Service Tests', () => {
       });
 
       it('should create a Job', async () => {
-        const returnedFromService = { id: 123, ...elemDefault };
-        const expected = { ...returnedFromService };
+        const returnedFromService = { id: 123, date: dayjs(currentDate).format(DATE_FORMAT), ...elemDefault };
+        const expected = { date: currentDate, ...returnedFromService };
 
         axiosStub.post.resolves({ data: returnedFromService });
         return service.create({}).then(res => {
@@ -74,9 +78,19 @@ describe('Service Tests', () => {
       });
 
       it('should update a Job', async () => {
-        const returnedFromService = { jobTitle: 'BBBBBB', minSalary: 1, maxSalary: 1, ...elemDefault };
+        const returnedFromService = {
+          jobTitle: 'BBBBBB',
+          minSalary: 1,
+          maxSalary: 1,
+          subSalary: 1,
+          totalSalary: 1,
+          date: dayjs(currentDate).format(DATE_FORMAT),
+          codeCode: 'BBBBBB',
+          profil: 'BBBBBB',
+          ...elemDefault,
+        };
 
-        const expected = { ...returnedFromService };
+        const expected = { date: currentDate, ...returnedFromService };
         axiosStub.put.resolves({ data: returnedFromService });
 
         return service.update(expected).then(res => {
@@ -96,10 +110,10 @@ describe('Service Tests', () => {
       });
 
       it('should partial update a Job', async () => {
-        const patchObject = { ...new Job() };
+        const patchObject = { jobTitle: 'BBBBBB', minSalary: 1, maxSalary: 1, totalSalary: 1, profil: 'BBBBBB', ...new Job() };
         const returnedFromService = Object.assign(patchObject, elemDefault);
 
-        const expected = { ...returnedFromService };
+        const expected = { date: currentDate, ...returnedFromService };
         axiosStub.patch.resolves({ data: returnedFromService });
 
         return service.partialUpdate(patchObject).then(res => {
@@ -119,8 +133,18 @@ describe('Service Tests', () => {
       });
 
       it('should return a list of Job', async () => {
-        const returnedFromService = { jobTitle: 'BBBBBB', minSalary: 1, maxSalary: 1, ...elemDefault };
-        const expected = { ...returnedFromService };
+        const returnedFromService = {
+          jobTitle: 'BBBBBB',
+          minSalary: 1,
+          maxSalary: 1,
+          subSalary: 1,
+          totalSalary: 1,
+          date: dayjs(currentDate).format(DATE_FORMAT),
+          codeCode: 'BBBBBB',
+          profil: 'BBBBBB',
+          ...elemDefault,
+        };
+        const expected = { date: currentDate, ...returnedFromService };
         axiosStub.get.resolves([returnedFromService]);
         return service.retrieve({ sort: {}, page: 0, size: 10 }).then(res => {
           expect(res).toContainEqual(expected);
